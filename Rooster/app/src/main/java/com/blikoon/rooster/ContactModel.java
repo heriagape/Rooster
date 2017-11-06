@@ -36,9 +36,9 @@ public class ContactModel {
 
         Contact contact1 = new Contact("shami@salama.im");
         mContacts.add(contact1);
-        Contact contact2 = new Contact("User2@server.com");
+        Contact contact2 = new Contact("momo@salama.im");
         mContacts.add(contact2);
-        Contact contact3 = new Contact("User3@server.com");
+        Contact contact3 = new Contact("musimbate@salama.im");
         mContacts.add(contact3);
         Contact contact4 = new Contact("User4@server.com");
         mContacts.add(contact4);

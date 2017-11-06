@@ -65,7 +65,7 @@ public class ChatActivity extends ActionBarActivity implements
 
         mVerticalManager = new LinearLayoutManager(this,
                 LinearLayoutManager.VERTICAL, false);
-
+        
         mAdapter = new ChatMessagesAdapter(this,counterpartJid);
         mAdapter.setOnItemClickListener(this);
         mAdapter.setmOnInformRecyclerViewToScrollDownListener(this);

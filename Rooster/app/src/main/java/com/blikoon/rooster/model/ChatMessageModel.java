@@ -25,6 +25,9 @@ public class ChatMessageModel {
     private static ChatMessageModel sFoodModel;
     private SQLiteDatabase mDatabase;
     private Context mContext;
+
+
+
     private String counterpartJid;
 
     public OnMessageAddListener getMessageAddListener() {
@@ -46,6 +49,9 @@ public class ChatMessageModel {
         {
             sFoodModel = new ChatMessageModel(context,counterpartJid);
         }
+        /** If the model is already there, make sure it is used to retrieve the correct messages from the db.
+         * Messages belonging to counterpartJid */
+        sFoodModel.setCounterpartJid(counterpartJid);
         return  sFoodModel;
     }
 
@@ -53,6 +59,10 @@ public class ChatMessageModel {
     {
         mContext = context.getApplicationContext();
         mDatabase = DatabaseBackend.getInstance(mContext).getWritableDatabase();
+        this.counterpartJid = counterpartJid;
+    }
+
+    public void setCounterpartJid(String counterpartJid) {
         this.counterpartJid = counterpartJid;
     }
 
