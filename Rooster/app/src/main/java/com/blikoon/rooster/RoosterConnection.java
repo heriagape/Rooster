@@ -8,6 +8,9 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.blikoon.rooster.model.ChatMessage;
+import com.blikoon.rooster.model.ChatMessageModel;
+
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ReconnectionManager;
@@ -130,14 +133,23 @@ public class RoosterConnection implements ConnectionListener {
                     contactJid=from;
                 }
 
-                //Bundle up the intent and send the broadcast.
+                //Add the Received message to the database
+
+                ///ADDED
+
+                if(ChatMessageModel.get(mApplicationContext,contactJid).addMessage(
+                        new ChatMessage(message.getBody(),System.currentTimeMillis(),
+                                ChatMessage.Type.RECEIVED,contactJid)))
+                {
+                    //                //Bundle up the intent and send the broadcast.
                 Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
                 intent.setPackage(mApplicationContext.getPackageName());
                 intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID,contactJid);
                 intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,message.getBody());
                 mApplicationContext.sendBroadcast(intent);
                 Log.d(TAG,"Received message from :"+contactJid+" broadcast sent.");
-                ///ADDED
+
+                }
 
             }
         });
