@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -22,18 +21,12 @@ import com.blikoon.rooster.model.ChatMessageModel;
 import com.blikoon.rooster.ui.InsetDecoration;
 import com.blikoon.rooster.ui.KeyboardUtil;
 
-//import co.intentservice.chatui.ChatView;
-//import co.intentservice.chatui.models.ChatMessage;
-
-
 public class ChatActivity extends ActionBarActivity implements
         ChatMessagesAdapter.OnItemClickListener,ChatMessagesAdapter.OnInformRecyclerViewToScrollDownListener,
         KeyboardUtil.KeyboardVisibilityListener {
 
     private static final String TAG ="ChatActivity";
 
-    private String contactJid;
-//    private ChatView mChatView;
     private BroadcastReceiver mBroadcastReceiver;
 
 
@@ -43,12 +36,6 @@ public class ChatActivity extends ActionBarActivity implements
     private EditText textInputTextEdit;
     private ImageButton textSendButton;
     private String counterpartJid;
-
-
-
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +52,7 @@ public class ChatActivity extends ActionBarActivity implements
 
         mVerticalManager = new LinearLayoutManager(this,
                 LinearLayoutManager.VERTICAL, false);
-        
+
         mAdapter = new ChatMessagesAdapter(this,counterpartJid);
         mAdapter.setOnItemClickListener(this);
         mAdapter.setmOnInformRecyclerViewToScrollDownListener(this);
@@ -118,48 +105,6 @@ public class ChatActivity extends ActionBarActivity implements
 
         KeyboardUtil.setKeyboardVisibilityListener(this,this);
 
-
-//        mChatView =(ChatView) findViewById(R.id.rooster_chat_view);
-//
-//        mChatView.setOnSentMessageListener(new ChatView.OnSentMessageListener(){
-//            @Override
-//            public boolean sendMessage(ChatMessage chatMessage){
-//                // perform actual message sending
-//                if (RoosterConnectionService.getState().equals(RoosterConnection.ConnectionState.CONNECTED)) {
-//                    Log.d(TAG, "The client is connected to the server,Sending Message");
-//                    //Send the message to the server
-//
-//                    Intent intent = new Intent(RoosterConnectionService.SEND_MESSAGE);
-//                    intent.putExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY,
-//                            mChatView.getTypedMessage());
-//                    intent.putExtra(RoosterConnectionService.BUNDLE_TO, contactJid);
-//
-//                    sendBroadcast(intent);
-//
-//                } else {
-//                    Toast.makeText(getApplicationContext(),
-//                            "Client not connected to server ,Message not sent!",
-//                            Toast.LENGTH_LONG).show();
-//                }
-//                //message sending ends here
-//                return true;
-//            }
-//        });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 
     @Override
@@ -187,19 +132,6 @@ public class ChatActivity extends ActionBarActivity implements
                 {
                     case RoosterConnectionService.NEW_MESSAGE:
                         mAdapter.onMessageAdd();
-//                        String from = intent.getStringExtra(RoosterConnectionService.BUNDLE_FROM_JID);
-//                        String body = intent.getStringExtra(RoosterConnectionService.BUNDLE_MESSAGE_BODY);
-//
-//                        if ( from.equals(contactJid))
-//                        {
-////                            ChatMessage chatMessage = new ChatMessage(body,System.currentTimeMillis(), ChatMessage.Type.RECEIVED);
-////                            mChatView.addMessage(chatMessage);
-//
-//                        }else
-//                        {
-//                            Log.d(TAG,"Got a message from jid :"+from);
-//                        }
-
                         return;
                 }
 
@@ -208,7 +140,6 @@ public class ChatActivity extends ActionBarActivity implements
 
         IntentFilter filter = new IntentFilter(RoosterConnectionService.NEW_MESSAGE);
         registerReceiver(mBroadcastReceiver,filter);
-
 
     }
 
