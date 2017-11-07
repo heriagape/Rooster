@@ -14,27 +14,31 @@ import com.blikoon.rooster.model.ChatMessageModel;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ReconnectionManager;
+import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
 
-import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.chat2.Chat;
 import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.chat2.IncomingChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jivesoftware.smackx.ping.PingFailedListener;
+import org.jivesoftware.smackx.ping.PingManager;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Updated by gakwaya on Oct/08/2017.
  */
-public class RoosterConnection implements ConnectionListener {
+public class RoosterConnection implements ConnectionListener ,PingFailedListener {
 
     private static final String TAG = "RoosterConnection";
 
@@ -44,6 +48,44 @@ public class RoosterConnection implements ConnectionListener {
     private  final String mServiceName;
     private XMPPTCPConnection mConnection;
     private BroadcastReceiver uiThreadMessageReceiver;//Receives messages from the ui thread.
+
+    private PingManager pingManager;
+
+
+    /** Due to connection timeout enforced by xmpp servers, if the client is idle for X seconds[configurable on server],
+     * the server closes the connection and you get a closed on Error exception. Smack usually reconnects after that but a given
+     * interval of time it fails to reconnect. We introduce a periodic ping function to ping the server, just to trick
+     * it into thinking that the client is not idle. This keeps the client alive. But at the expense of more battery to
+     * keep the connection to the server.
+     *
+     * Another threat our app have is the doze mode of android, that kills the app when it is not used for some time.
+     * We have no way around that, the only way that is GCM independent is to let the user exempt the app from battery
+     * optimizations.*/
+    private Timer pingTimer;
+    private TimerTask pingTimerTask = new TimerTask() {
+
+        @Override
+        public void run() {
+            try {
+                if(pingManager.pingMyServer())
+                {
+                    Log.d(TAG,"Server still accessible");
+                }else {
+                    Log.d(TAG,"Server NOT Accessible");
+                }
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+    };
+
+    @Override
+    public void pingFailed() {
+        Log.d(TAG,"Ping Failed Method called.");
+    }
 
 
     public static enum ConnectionState
@@ -87,6 +129,7 @@ public class RoosterConnection implements ConnectionListener {
                 .setHost("salama.im")
                 .setResource("Rooster")
 
+
                 //Was facing this issue
                 //https://discourse.igniterealtime.org/t/connection-with-ssl-fails-with-java-security-keystoreexception-jks-not-found/62566
                 .setKeystoreType(null) //This line seems to get rid of the problem
@@ -102,16 +145,33 @@ public class RoosterConnection implements ConnectionListener {
         //Set up the ui thread broadcast message receiver.
         setupUiThreadBroadCastMessageReceiver();
 
+        SmackConfiguration.DEBUG = true;
+
         mConnection = new XMPPTCPConnection(conf);
+
         mConnection.addConnectionListener(this);
+
+//        PingManager.setDefaultPingInterval(10); //Ping every 2 minutes
+        pingManager = PingManager.getInstanceFor(mConnection);
+        pingManager.registerPingFailedListener(this);
+
         try {
             Log.d(TAG, "Calling connect() ");
             mConnection.connect();
             mConnection.login(mUsername,mPassword);
             Log.d(TAG, " login() Called ");
+
+            //Start the ping repeat timer here.
+            startPinging();
+
+
+
+
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+
 
         ChatManager.getInstanceFor(mConnection).addIncomingListener(new IncomingChatMessageListener() {
             @Override
@@ -160,6 +220,25 @@ public class RoosterConnection implements ConnectionListener {
         reconnectionManager.enableAutomaticReconnection();
 
     }
+
+
+
+    public void startPinging() {
+        Log.d(TAG,"Pinging process started...");
+        if(pingTimer != null) {
+            return;
+        }
+        pingTimer = new Timer();
+        pingTimer.scheduleAtFixedRate(pingTimerTask, 0, 1*60*1000);//Ping every one minute
+    }
+
+    public void stopPinging() {
+        pingTimer.cancel();
+        pingTimer = null;
+    }
+
+
+
 
     private void setupUiThreadBroadCastMessageReceiver()
     {
@@ -220,6 +299,9 @@ public class RoosterConnection implements ConnectionListener {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mApplicationContext);
         prefs.edit().putBoolean("xmpp_logged_in",false).commit();
 
+        //Stop pinging the server
+        stopPinging();
+
 
         if (mConnection != null)
         {
@@ -241,7 +323,6 @@ public class RoosterConnection implements ConnectionListener {
     public void connected(XMPPConnection connection) {
         RoosterConnectionService.sConnectionState=ConnectionState.CONNECTED;
         Log.d(TAG,"Connected Successfully");
-
     }
 
     @Override
