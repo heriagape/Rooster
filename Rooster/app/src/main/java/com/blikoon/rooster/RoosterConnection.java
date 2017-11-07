@@ -145,6 +145,7 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
         //Set up the ui thread broadcast message receiver.
         setupUiThreadBroadCastMessageReceiver();
 
+        //Enable debugging for connections.
         SmackConfiguration.DEBUG = true;
 
         mConnection = new XMPPTCPConnection(conf);
