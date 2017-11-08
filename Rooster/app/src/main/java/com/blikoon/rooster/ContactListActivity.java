@@ -1,6 +1,11 @@
 package com.blikoon.rooster;
 
+import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -13,6 +18,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -36,6 +43,7 @@ public class ContactListActivity extends AppCompatActivity {
 
         mAdapter = new ContactAdapter(contacts);
         contactsRecyclerView.setAdapter(mAdapter);
+
     }
 
     @Override
@@ -69,12 +77,16 @@ public class ContactListActivity extends AppCompatActivity {
     private class ContactHolder extends RecyclerView.ViewHolder
     {
         private TextView contactTextView;
+        private TextView messageAbstractTextView;
+        private TextView timestampTextView;
         private Contact mContact;
         public ContactHolder ( View itemView)
         {
             super(itemView);
 
             contactTextView = (TextView) itemView.findViewById(R.id.contact_jid);
+            messageAbstractTextView = (TextView) itemView.findViewById(R.id.message_abstract);
+            timestampTextView = (TextView) itemView.findViewById(R.id.text_message_timestamp);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -100,6 +112,8 @@ public class ContactListActivity extends AppCompatActivity {
                 return;
             }
             contactTextView.setText(mContact.getJid());
+            messageAbstractTextView.setText("This is the message we exchanged the last time we talked.");
+            timestampTextView.setText("12:10 AM");
 
         }
     }
@@ -119,7 +133,7 @@ public class ContactListActivity extends AppCompatActivity {
 
             LayoutInflater layoutInflater = LayoutInflater.from(parent.getContext());
             View view = layoutInflater
-                    .inflate(R.layout.list_item_contact, parent,
+                    .inflate(R.layout.list_item_chat, parent,
                             false);
             return new ContactHolder(view);
         }
