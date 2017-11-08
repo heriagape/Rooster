@@ -202,7 +202,7 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
                         new ChatMessage(message.getBody(),System.currentTimeMillis(),
                                 ChatMessage.Type.RECEIVED,contactJid)))
                 {
-                    //                //Bundle up the intent and send the broadcast.
+                    //Bundle up the intent and send the broadcast.
                 Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
                 intent.setPackage(mApplicationContext.getPackageName());
                 intent.putExtra(RoosterConnectionService.BUNDLE_FROM_JID,contactJid);

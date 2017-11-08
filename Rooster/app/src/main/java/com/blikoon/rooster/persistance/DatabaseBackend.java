@@ -4,7 +4,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 import com.blikoon.rooster.model.ChatMessage;
-import com.blikoon.rooster.model.Contact;
+import com.blikoon.rooster.model.Chats;
 
 /**
  * Created by gakwaya on 2017/11/1.
@@ -15,11 +15,11 @@ public class DatabaseBackend extends SQLiteOpenHelper {
     private static DatabaseBackend instance = null;
 
     private static final String DATABASE_NAME = "rooster_db";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     private static String CREATE_CONTACTS_STATEMENT = "create table "
-            + Contact.TABLE_NAME + "(" + Contact.Cols.displayName + " TEXT, "
-            + Contact.Cols.contactType + " TEXT, " + Contact.Cols.jid + " TEXT"
+            + Chats.TABLE_NAME + "("
+            + Chats.Cols.contactType + " TEXT, " + Chats.Cols.jid + " TEXT"
            + ");";
 
     private static String CREATE_CHAT_MESSAGES_STATEMENT = "create table "
@@ -51,6 +51,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        //Recreate the table on update.
         onCreate(db);
 
     }

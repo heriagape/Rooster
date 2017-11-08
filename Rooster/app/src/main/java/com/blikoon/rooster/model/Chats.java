@@ -6,35 +6,39 @@ import android.content.ContentValues;
  * Created by gakwaya on 2017/11/1.
  */
 
-public class Contact {
+/** Chats encapsulates the data shown in each single item in the ChatListActivity. It also wraps around
+ * the schema of the table to store chats information in the database.*/
 
-    private String displayName;
+public class Chats {
+
     private String jid;
     private ContactType contactType;
 
 
-    public static final String TABLE_NAME = "contacts";
+
+    private String lastMessageTimeStamp;
+
+
+    public static final String TABLE_NAME = "chats";
 
     public static final class Cols
     {
-        public static final String displayName = "displayName";
         public static final String jid = "jid";
         public static final String contactType = "contactType";
     }
 
 
-    public Contact(String displayName, String jid, ContactType contactType) {
-        this.displayName = displayName;
+    public Chats( String jid, ContactType contactType) {
         this.jid = jid;
         this.contactType = contactType;
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public String getLastMessageTimeStamp() {
+        return lastMessageTimeStamp;
     }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
+    public void setLastMessageTimeStamp(String lastMessageTimeStamp) {
+        this.lastMessageTimeStamp = lastMessageTimeStamp;
     }
 
     public String getJid() {
@@ -56,7 +60,6 @@ public class Contact {
     public ContentValues getContentValues()
     {
         ContentValues values = new ContentValues();
-        values.put("displayName", displayName);
         values.put("jid", jid);
         values.put("contactType",getTypeStringValue(contactType));
 

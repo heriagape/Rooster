@@ -22,7 +22,7 @@ public class ChatMessageModel {
          void onMessageAdd();
     }
 
-    private static ChatMessageModel sFoodModel;
+    private static ChatMessageModel sChatMessageModel;
     private SQLiteDatabase mDatabase;
     private Context mContext;
 
@@ -45,14 +45,14 @@ public class ChatMessageModel {
 
     public static ChatMessageModel get(Context context, String counterpartJid)
     {
-        if(sFoodModel == null)
+        if(sChatMessageModel == null)
         {
-            sFoodModel = new ChatMessageModel(context,counterpartJid);
+            sChatMessageModel = new ChatMessageModel(context,counterpartJid);
         }
         /** If the model is already there, make sure it is used to retrieve the correct messages from the db.
          * Messages belonging to counterpartJid */
-        sFoodModel.setCounterpartJid(counterpartJid);
-        return  sFoodModel;
+        sChatMessageModel.setCounterpartJid(counterpartJid);
+        return sChatMessageModel;
     }
 
     private ChatMessageModel(Context context ,String counterpartJid)

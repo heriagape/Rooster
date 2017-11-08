@@ -6,6 +6,11 @@
         android:title="@string/rooster_logout"
        />
 
+    <item
+        android:id="@+id/rooster_add_contact"
+        android:title="@string/rooster_add_contact"
+        />
+
 
 
 </menu>

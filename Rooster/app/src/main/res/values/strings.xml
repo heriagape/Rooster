@@ -15,4 +15,5 @@
     </string>
     <string name="rooster_logout">Logout</string>
     <string name="send_message">Send Message</string>
+    <string name="rooster_add_contact">Add Contact</string>
 </resources>
