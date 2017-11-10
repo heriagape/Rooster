@@ -21,6 +21,8 @@ import com.blikoon.rooster.model.ChatMessageModel;
 import com.blikoon.rooster.ui.InsetDecoration;
 import com.blikoon.rooster.ui.KeyboardUtil;
 
+import org.acra.ACRA;
+
 public class ChatActivity extends ActionBarActivity implements
         ChatMessagesAdapter.OnItemClickListener,ChatMessagesAdapter.OnInformRecyclerViewToScrollDownListener,
         KeyboardUtil.KeyboardVisibilityListener {
@@ -41,6 +43,8 @@ public class ChatActivity extends ActionBarActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+
 
         //Get the counterpart Jid
         Intent intent = getIntent();

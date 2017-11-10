@@ -70,6 +70,11 @@ public class ChatListActivity extends AppCompatActivity {
             Intent loginIntent = new Intent(this,LoginActivity.class);
             startActivity(loginIntent);
 
+//            //Crash the app. This is for just testing ACRA reporting
+//            String crashString = null;
+//            crashString.length();
+
+
         }else if(item.getItemId() == R.id.rooster_add_contact)
         {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);

@@ -16,4 +16,16 @@
     <string name="rooster_logout">Logout</string>
     <string name="send_message">Send Message</string>
     <string name="rooster_add_contact">Add Contact</string>
+    <string name="toast_crash">Rooster has crashed and we just sent the report</string>
+
+
+    <string name="crash_toast_text">Ooooops ! I crashed, but a report has been sent to my developer to help fix the issue !</string>
+
+    <string name="crash_dialog_title">Rooster has crashed</string>
+    <string name="crash_dialog_text">An unexpected error occurred forcing the
+    application to stop. Please help us fix this by sending us error data,
+    all you have to do is click OK.</string>
+    <string name="crash_dialog_comment_prompt">You might add your comments about the problem below:</string>
+    <string name="crash_dialog_ok_toast">Thank you !</string>
+    <string name="crash_user_email_label">Your Email</string>
 </resources>

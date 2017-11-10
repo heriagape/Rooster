@@ -48,4 +48,6 @@ dependencies {
         exclude module: 'smack-omemo-signal'
     }
 
+    compile 'ch.acra:acra:4.9.2'
+
 }
