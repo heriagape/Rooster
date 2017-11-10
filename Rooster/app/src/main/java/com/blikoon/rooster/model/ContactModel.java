@@ -5,88 +5,69 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.blikoon.rooster.persistance.ChatMessageCursorWrapper;
 import com.blikoon.rooster.persistance.ChatsCursorWrapper;
+import com.blikoon.rooster.persistance.ContactCursorWrapper;
 import com.blikoon.rooster.persistance.DatabaseBackend;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by gakwaya on 2017/11/8.
+ * Created by gakwaya on 2017/11/10.
  */
 
-public class ChatsModel {
+public class ContactModel {
 
-    private static ChatsModel sChatsModel;
+
+    private static ContactModel sContactMoel;
     private SQLiteDatabase mDatabase;
     private Context mContext;
 
-    public static ChatsModel get(Context context)
+    public static ContactModel get(Context context)
     {
-        if(sChatsModel == null)
+        if(sContactMoel == null)
         {
-            sChatsModel = new ChatsModel(context);
+            sContactMoel = new ContactModel(context);
         }
         /** If the model is already there, make sure it is used to retrieve the correct messages from the db.
          * Messages belonging to counterpartJid */
         //sChatMessageModel.setCounterpartJid(counterpartJid);
-        return sChatsModel;
+        return sContactMoel;
     }
-    private ChatsModel(Context context)
+    private ContactModel(Context context)
     {
         mContext = context.getApplicationContext();
         mDatabase = DatabaseBackend.getInstance(mContext).getWritableDatabase();
     }
 
 
-    public List<Chats> getChats()
+    public List<Contact> getContacts()
     {
-        List<Chats> chats = new ArrayList<>();
+        List<Contact> contacts = new ArrayList<>();
 
-        ChatsCursorWrapper cursor = queryMessages(null,null);
+        ContactCursorWrapper cursor = queryMessages(null,null);
 
         try
         {
             cursor.moveToFirst();
             while( !cursor.isAfterLast())
             {
-                chats.add(cursor.getChat());
+                contacts.add(cursor.getContact());
                 cursor.moveToNext();
             }
 
         }finally {
             cursor.close();
         }
-        return chats;
+        return contacts;
     }
 
-    public List<Chats> getChatsByJid(String jid)
-    {
-        List<Chats> chats = new ArrayList<>();
 
-        ChatsCursorWrapper cursor = queryMessages("jid= ?",new String [] {jid});
 
-        try
-        {
-            cursor.moveToFirst();
-            while( !cursor.isAfterLast())
-            {
-                chats.add(cursor.getChat());
-                cursor.moveToNext();
-            }
-
-        }finally {
-            cursor.close();
-        }
-        return chats;
-
-    }
-
-    private ChatsCursorWrapper queryMessages(String whereClause , String [] whereArgs)
+    private ContactCursorWrapper queryMessages(String whereClause , String [] whereArgs)
     {
         Cursor cursor = mDatabase.query(
-                Chats.TABLE_NAME,
+                Contact.TABLE_NAME,
                 null ,//Columns - null selects all columns
                 whereClause,
                 whereArgs,
@@ -94,14 +75,14 @@ public class ChatsModel {
                 null, //having
                 null//orderBy
         );
-        return new ChatsCursorWrapper(cursor);
+        return new ContactCursorWrapper(cursor);
     }
 
 
-    public boolean addChat(Chats c)
+    public boolean addContact(Contact c)
     {
         ContentValues values = c.getContentValues();
-        if ((mDatabase.insert(Chats.TABLE_NAME, null, values)== -1))
+        if ((mDatabase.insert(Contact.TABLE_NAME, null, values)== -1))
         {
             return false;
         }else
@@ -109,6 +90,7 @@ public class ChatsModel {
             return true;
         }
     }
+
 
 
 

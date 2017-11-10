@@ -3,6 +3,7 @@ package com.blikoon.rooster;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,22 +29,37 @@ public class ChatListActivity extends AppCompatActivity {
 
     private static final String TAG = "ChatListActivity";
 
-    private RecyclerView contactsRecyclerView;
+    private RecyclerView chatsRecyclerView;
     private ChatListAdapter mAdapter;
+    private FloatingActionButton newConversationButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_contact_list);
+        setContentView(R.layout.activity_chat_list);
 
-        contactsRecyclerView = (RecyclerView) findViewById(R.id.contact_list_recycler_view);
-        contactsRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
+        chatsRecyclerView = (RecyclerView) findViewById(R.id.chat_list_recycler_view);
+        chatsRecyclerView.setLayoutManager(new LinearLayoutManager(getBaseContext()));
 
         //ContactModel model = ContactModel.get(getBaseContext());
         //List<Contact> contacts = model.getContacts();
 
         mAdapter = new ChatListAdapter(this);
-        contactsRecyclerView.setAdapter(mAdapter);
+        chatsRecyclerView.setAdapter(mAdapter);
+
+        newConversationButton = (FloatingActionButton) findViewById(R.id.new_conversation_floating_button);
+        newConversationButton.setBackgroundTintList(getResources().getColorStateList(R.color.colorPrimary));
+        newConversationButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                addContact();
+                    // Inside here we start the chat ContactListActivity
+                    Intent intent = new Intent(ChatListActivity.this
+                            ,ContactListActivity.class);
+                    //intent.putExtra("EXTRA_CONTACT_JID",mChat.getJid());
+                    startActivity(intent);
+            }
+        });
 
     }
 
@@ -77,43 +93,58 @@ public class ChatListActivity extends AppCompatActivity {
 
         }else if(item.getItemId() == R.id.rooster_add_contact)
         {
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Type in JID");
-            // Set up the input
-            final EditText input = new EditText(this);
-            // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-            input.setInputType(InputType.TYPE_CLASS_TEXT);
-            builder.setView(input);
-
-            // Set up the buttons
-            builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    //User has clicked the OK button.
-                   String inputText = input.getText().toString();
-
-                    Log.d(TAG,"Adding Contact :"+inputText);
-                    if(ChatsModel.get(getApplicationContext()).addChat(new Chats(inputText, Chats.ContactType.ONE_ON_ONE)))
-                    {
-                        Log.d(TAG,"Contact "+inputText +"Added successfuly");
-                        mAdapter.notifyForUiUpdate();
-                    }else
-                    {
-                        Log.d(TAG,"Could not add Contact "+inputText);
-                    }
-                }
-            });
-            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                }
-            });
-
-            builder.show();
+            addContact();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        mAdapter.notifyForUiUpdate();
+    }
+
+    private void addContact() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Type in JID");
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                //User has clicked the OK button.
+               String inputText = input.getText().toString();
+
+                Log.d(TAG,"Adding Contact :"+inputText);
+                if(ChatsModel.get(getApplicationContext()).addChat(new Chats(inputText, Chats.ContactType.ONE_ON_ONE)))
+                {
+                    Log.d(TAG,"Contact "+inputText +"Added successfuly");
+                    mAdapter.notifyForUiUpdate();
+                }else
+                {
+                    Log.d(TAG,"Could not add Contact "+inputText);
+                }
+            }
+        });
+        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
     }
 
     private class ChatHolder extends RecyclerView.ViewHolder
