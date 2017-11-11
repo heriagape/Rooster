@@ -61,10 +61,22 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         db.execSQL(CREATE_CHAT_MESSAGES_STATEMENT);
     }
 
+    /**
+     * Do better handling of db updates. We follow the approach advised here : https://thebhwgroup.com/blog/how-android-sqlite-onupgrade
+     * A copy of a template for cheating purposes has been kept in our bag of tricks here : https://github.com/blikoon/Ubufundi/blob/master/Android_SQLite_template/SQLiteHelper.java
+     * You can find more info on sql manipulations here : https://www.techonthenet.com/sqlite/index.php
+     * */
+
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        //Recreate the table on update.
-        onCreate(db);
+        if(oldVersion < 4)
+        {
+            db.execSQL("DROP TABLE IF EXISTS " + Chats.TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + Contact.TABLE_NAME);
+            db.execSQL("DROP TABLE IF EXISTS " + ChatMessage.TABLE_NAME);
+            onCreate(db);
+        }
+
 
     }
 
