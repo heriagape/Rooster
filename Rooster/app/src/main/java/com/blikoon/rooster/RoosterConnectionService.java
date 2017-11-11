@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
@@ -83,7 +84,11 @@ public class RoosterConnectionService extends Service {
         {
             Log.d(TAG,"Something went wrong while connecting ,make sure the credentials are right and try again");
             e.printStackTrace();
-            //Stop the service all together.
+
+            //Stop the service all together if user is not logged in already.
+            boolean logged_in_state = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                    .getBoolean("xmpp_logged_in",false);
+            if(!logged_in_state)
             stopSelf();
         }
 

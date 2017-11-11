@@ -234,8 +234,12 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
     }
 
     public void stopPinging() {
-        pingTimer.cancel();
-        pingTimer = null;
+        if(pingTimer !=null)
+        {
+            pingTimer.cancel();
+            pingTimer = null;
+        }
+
     }
 
 
