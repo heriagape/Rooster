@@ -78,7 +78,14 @@ public class RoosterConnectionService extends Service {
         }
         try
         {
-            mConnection.connect();
+
+            if(mConnection.isNetworkAvailable())
+            {
+                mConnection.connect();
+            }else
+            {
+                Log.d(TAG,"No network connectivity...");
+            }
 
         }catch (IOException |SmackException |XMPPException e)
         {

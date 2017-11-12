@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -14,7 +16,6 @@ import com.blikoon.rooster.model.ChatMessageModel;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ReconnectionManager;
-import org.jivesoftware.smack.SmackConfiguration;
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
 
+
 /**
  * Updated by gakwaya on Oct/08/2017.
  */
@@ -48,7 +50,6 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
     private  final String mServiceName;
     private XMPPTCPConnection mConnection;
     private BroadcastReceiver uiThreadMessageReceiver;//Receives messages from the ui thread.
-
     private PingManager pingManager;
 
 
@@ -82,10 +83,7 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
         }
     };
 
-    @Override
-    public void pingFailed() {
-        Log.d(TAG,"Ping Failed Method called.");
-    }
+
 
 
     public static enum ConnectionState
@@ -128,6 +126,7 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
                 .setXmppDomain(mServiceName)
                 .setHost("salama.im")
                 .setResource("Rooster")
+                .setDebuggerEnabled(true)
 
 
                 //Was facing this issue
@@ -145,16 +144,13 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
         //Set up the ui thread broadcast message receiver.
         setupUiThreadBroadCastMessageReceiver();
 
-        //Enable debugging for connections.
-        SmackConfiguration.DEBUG = true;
-
         mConnection = new XMPPTCPConnection(conf);
 
         mConnection.addConnectionListener(this);
 
-//        PingManager.setDefaultPingInterval(10); //Ping every 2 minutes
         pingManager = PingManager.getInstanceFor(mConnection);
         pingManager.registerPingFailedListener(this);
+
 
         try {
             Log.d(TAG, "Calling connect() ");
@@ -323,7 +319,15 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
 
     }
 
+    public boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) mApplicationContext.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
 
+
+    /** ConnectionListener Overrides*/
     @Override
     public void connected(XMPPConnection connection) {
         RoosterConnectionService.sConnectionState=ConnectionState.CONNECTED;
@@ -355,7 +359,7 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
     @Override
     public void reconnectingIn(int seconds) {
         RoosterConnectionService.sConnectionState = ConnectionState.CONNECTING;
-        Log.d(TAG,"ReconnectingIn() ");
+        Log.d(TAG,"ReconnectingIn() "+ seconds +" seconds");
 
     }
 
@@ -372,6 +376,17 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
         Log.d(TAG,"ReconnectionFailed()");
 
     }
+
+    /** PingFailedListener Overrides */
+
+    @Override
+    public void pingFailed() {
+        Log.d(TAG,"Ping Failed Method called.");
+    }
+
+
+
+
 
     private void showContactListActivityWhenAuthenticated()
     {
