@@ -30,6 +30,8 @@ configurations {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+
+    compile 'com.github.ge0rg:MemorizingTrustManager:9e30ffdf7d'
     //    compile 'com.github.rutura:android-chat-ui:v0.1.5'
 
 
