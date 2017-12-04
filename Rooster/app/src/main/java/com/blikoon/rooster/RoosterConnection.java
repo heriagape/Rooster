@@ -8,15 +8,20 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.os.Debug;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
 import com.blikoon.rooster.model.ChatMessage;
 import com.blikoon.rooster.model.ChatMessageModel;
+import com.blikoon.rooster.model.Chats;
+import com.blikoon.rooster.model.ChatsModel;
+import com.blikoon.rooster.model.Contact;
+import com.blikoon.rooster.model.ContactModel;
 
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.ConnectionListener;
+import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.PresenceListener;
 import org.jivesoftware.smack.ReconnectionManager;
 import org.jivesoftware.smack.SASLAuthentication;
 import org.jivesoftware.smack.SmackConfiguration;
@@ -31,17 +36,27 @@ import org.jivesoftware.smack.debugger.SmackDebugger;
 import org.jivesoftware.smack.debugger.SmackDebuggerFactory;
 import org.jivesoftware.smack.initializer.SmackInitializer;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.proxy.ProxyInfo;
+import org.jivesoftware.smack.roster.PresenceEventListener;
+import org.jivesoftware.smack.roster.Roster;
+import org.jivesoftware.smack.roster.RosterEntry;
+import org.jivesoftware.smack.roster.RosterListener;
+import org.jivesoftware.smack.roster.SubscribeListener;
+import org.jivesoftware.smack.roster.packet.RosterPacket;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 import org.jivesoftware.smack.util.DNSUtil;
-import org.jivesoftware.smack.util.dns.DNSResolver;
 import org.jivesoftware.smack.util.dns.HostAddress;
-import org.jivesoftware.smack.util.dns.SRVRecord;
+import org.jivesoftware.smack.util.dns.minidns.MiniDnsResolver;
 import org.jivesoftware.smackx.debugger.android.AndroidDebugger;
 import org.jivesoftware.smackx.ping.PingFailedListener;
 import org.jivesoftware.smackx.ping.PingManager;
+import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
+import org.jxmpp.jid.FullJid;
+import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 
@@ -54,6 +69,7 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -66,7 +82,7 @@ import de.duenndns.ssl.MemorizingTrustManager;
 /**
  * Updated by gakwaya on Oct/08/2017.
  */
-public class RoosterConnection implements ConnectionListener ,PingFailedListener {
+public class RoosterConnection implements ConnectionListener ,PingFailedListener,RosterListener,SubscribeListener,PresenceEventListener,PresenceListener{
 
     private static final String TAG = "RoosterConnection";
 
@@ -89,6 +105,8 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
     private SecureRandom secureRandom;
 
     private MemorizingTrustManager mMemTrust;
+
+    Roster mRoster;
 
 
 
@@ -175,20 +193,23 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
             //java.lang.System.setProperty("java.net.preferIPv4Stack", "true");
             //java.lang.System.setProperty("java.net.preferIPv6Addresses", "false");
 
+
+
             /** This is causing the crash reported here :
              * https://discourse.igniterealtime.org/t/ava-lang-illegalstateexception-no-dns-resolver-active-in-smack-at-org-jivesoftware-smack-util-dnsutil-resolvedomain-dnsutil-java-169/79697/1
              * COME BACK WHEN YOU HAVE A WORK AROUND.
              * */
-//            Log.d(TAG, "(DNS SRV) resolving: " + domain);
-//            List<HostAddress> listHostsFailed = new ArrayList<>();
-//            List<HostAddress> listHosts = DNSUtil.resolveXMPPServiceDomain(domain, listHostsFailed, ConnectionConfiguration.DnssecMode.disabled);
-//
-//            if (listHosts.size() > 0) {
-//                server = listHosts.get(0).getFQDN();
-//                serverPort = listHosts.get(0).getPort();
-//
-//                Log.d(TAG, "(DNS SRV) resolved: " + domain + "=" + server + ":" + serverPort);
-//            }
+            MiniDnsResolver.setup();/** Suggested by Flow as a workaround.*/
+            Log.d(TAG, "(DNS SRV) resolving: " + domain);
+            List<HostAddress> listHostsFailed = new ArrayList<>();
+            List<HostAddress> listHosts = DNSUtil.resolveXMPPServiceDomain(domain, listHostsFailed, ConnectionConfiguration.DnssecMode.disabled);
+
+            if (listHosts.size() > 0) {
+                server = listHosts.get(0).getFQDN();
+                serverPort = listHosts.get(0).getPort();
+
+                Log.d(TAG, "(DNS SRV) resolved: " + domain + "=" + server + ":" + serverPort);
+            }
         }
 
         if (serverPort == 0) //if serverPort is set to 0 then use 5222 as default
@@ -374,10 +395,18 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
 
         mConnection = new XMPPTCPConnection(mConfig.build());
 
+
+
         mConnection.addConnectionListener(this);
 
         pingManager = PingManager.getInstanceFor(mConnection);
         pingManager.registerPingFailedListener(this);
+
+        mRoster = Roster.getInstanceFor(mConnection);
+        mRoster.setSubscriptionMode(Roster.SubscriptionMode.manual);
+        mRoster.addRosterListener(this);
+        mRoster.addSubscribeListener(this);
+
 
 
         try {
@@ -385,6 +414,9 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
             mConnection.connect();
             mConnection.login(mUsername,mPassword);
             Log.d(TAG, " login() Called ");
+
+
+            updateRosterDataFromServer();
 
             //Start the ping repeat timer here.
             startPinging();
@@ -426,6 +458,21 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
                         new ChatMessage(message.getBody(),System.currentTimeMillis(),
                                 ChatMessage.Type.RECEIVED,contactJid)))
                 {
+                    /** Add the chat to chatListModel if the this jid is not in there already */
+                    List<Chats> chats = ChatsModel.get(mApplicationContext).getChatsByJid(contactJid);
+                    if( chats.size() == 0)
+                    {
+                        Log.d(TAG, contactJid + " is a new chat, adding them.");
+                        if(ChatsModel.get(mApplicationContext).addChat(new Chats(contactJid, Chats.ContactType.ONE_ON_ONE)))
+                        {
+                            Log.d(TAG,contactJid + "added successfully to ChatModel");
+                        }else
+                        {
+                            Log.d(TAG,"Could not ADD " + contactJid + "to chatModel");
+                        }
+
+                    }
+
                     //Bundle up the intent and send the broadcast.
                 Intent intent = new Intent(RoosterConnectionService.NEW_MESSAGE);
                 intent.setPackage(mApplicationContext.getPackageName());
@@ -443,6 +490,186 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
         ReconnectionManager reconnectionManager = ReconnectionManager.getInstanceFor(mConnection);
         reconnectionManager.setEnabledPerDefault(true);
         reconnectionManager.enableAutomaticReconnection();
+
+    }
+
+    public Collection<RosterEntry> getRosterEntries()
+    {
+        Collection<RosterEntry> entries = mRoster.getEntries();
+
+        return  entries;
+    }
+
+
+    public void sendPresense(Presence presence)
+    {
+        if(mConnection != null)
+        {
+            try {
+                mConnection.sendStanza(presence);
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void sendMessage( Message message)
+    {
+        if(mConnection != null)
+        {
+            try {
+                mConnection.sendStanza(message);
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public void subscribed(String contact)
+    {
+        Jid jidTo = null;
+        try {
+            jidTo = JidCreate.from(contact);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+        Presence subscribe = new Presence(jidTo, Presence.Type.subscribed);
+        sendPresense(subscribe);
+
+    }
+
+    public void unsubscribed(String contact)
+    {
+        Jid jidTo = null;
+        try {
+            jidTo = JidCreate.from(contact);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+        Presence subscribe = new Presence(jidTo, Presence.Type.unsubscribed);
+        sendPresense(subscribe);
+
+    }
+
+    public boolean sendSubscriptionRequest(String contact)
+    {
+        //TODO : This call is failing when client is not connected. Find  out why and find a way to buffer messages sent when not connected.
+        Jid jid = null;
+        try {
+             jid = JidCreate.from(contact);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+            return false;
+        }
+
+        try {
+            mRoster.sendSubscriptionRequest(jid.asBareJid());
+        } catch (SmackException.NotLoggedInException e) {
+            e.printStackTrace();
+            return false;
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+            return false;
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    /** Retrieves roster contacts from the server and syncs with the contact list saved in the db */
+    public void updateRosterDataFromServer()
+    {
+        //Get roster form server
+        Collection<RosterEntry> entries = RoosterConnectionService.getRoosterConnection().getRosterEntries();
+
+        Log.d(TAG,"Retrieving roster entries from server. "+entries.size() + " contacts in his roster");
+
+        for (RosterEntry entry : entries) {
+            RosterPacket.ItemType itemType=   entry.getType();
+            String stringItemType = getRosterItemTypeString(itemType);
+
+            Log.d(TAG,"-------------------------------");
+            Log.d(TAG,"Roster entry for  :"+ entry.toString());
+            Log.d(TAG,"Subscription type is :" + stringItemType);
+            Log.d(TAG,"getJid.toString() :" + entry.getJid().toString());
+
+            //Update data in the db
+            //Get all the contacts
+            List<String> contacts = ContactModel.get(mApplicationContext).getContactJidStrings();
+
+
+
+            if( !contacts.contains(entry.getJid().toString()))
+            {
+                //Add it to the db
+                if(ContactModel.get(mApplicationContext).addContact(new Contact(entry.getJid().toString(),
+                        rosterItemTypeToContactSubscriptionType(itemType))))
+                {
+                    Log.d(TAG,"Contact "+entry.getJid().toString() +"Added successfuly");
+                    //mAdapter.notifyForUiUpdate();
+                }else
+                {
+                    Log.d(TAG,"Could not add Contact "+entry.getJid().toString());
+                }
+            }
+
+        }
+
+        //For each entry
+
+            //If not in db already
+
+                //Add it
+
+    }
+
+    private String getRosterItemTypeString(RosterPacket.ItemType itemType)
+    {
+        if(itemType == RosterPacket.ItemType.none)
+        {
+            return "NONE";
+        }
+        else if(itemType == RosterPacket.ItemType.from)
+        {
+            return "FROM";
+        }
+        else if(itemType == RosterPacket.ItemType.to)
+        {
+            return "TO";
+        }
+        else if(itemType == RosterPacket.ItemType.both)
+        {
+            return  "BOTH";
+        }else
+        {
+            return "UNKNOWN";
+        }
+    }
+
+    private Contact.SubscriptionType rosterItemTypeToContactSubscriptionType(RosterPacket.ItemType itemType)
+    {
+        if(itemType == RosterPacket.ItemType.none)
+        {
+            return Contact.SubscriptionType.NONE_NONE;
+        }
+        else if(itemType == RosterPacket.ItemType.from)
+        {
+            return Contact.SubscriptionType.FROM_NONE;
+        }
+        else if(itemType == RosterPacket.ItemType.to)
+        {
+            return Contact.SubscriptionType.NONE_TO;
+        }
+        else
+        {
+            return Contact.SubscriptionType.FROM_TO;
+        }
 
     }
 
@@ -605,11 +832,152 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
 
     }
 
-    /** PingFailedListener Overrides */
+    /** PingFailedListener Overrides.
+     * */
 
     @Override
     public void pingFailed() {
         Log.d(TAG,"Ping Failed Method called.");
+    }
+
+    /** RosterListener Overrides
+     * You should find a way to update interested UI components of the
+     * changes in these overrides */
+    @Override
+    public void entriesAdded(Collection<Jid> addresses) {
+        Log.d(TAG,"Entries added to the Roster : " +addresses);
+
+    }
+
+    @Override
+    public void entriesUpdated(Collection<Jid> addresses) {
+        Log.d(TAG,"Entries updated in the Roster : " +addresses);
+
+    }
+
+    @Override
+    public void entriesDeleted(Collection<Jid> addresses) {
+        Log.d(TAG,"Entries Deleted in the Roster : " +addresses);
+
+    }
+
+    @Override
+    public void presenceChanged(Presence presence) {
+        Log.d(TAG,"Presence changed in the Roster : " +presence);
+
+    }
+
+    /** SubscribeListener Overrides */
+    @Override
+    public SubscribeAnswer processSubscribe(Jid from, Presence subscribeRequest) {
+        Log.d(TAG,"--------------------processSubscribe Called---------------------.");
+        Log.d(TAG,"JID is :" +from.toString());
+        Log.d(TAG,"Presence type :" +subscribeRequest.getType().toString());
+
+        //Update the subscription status to FROM_PENDING in the database.
+//        ContactModel.get(mApplicationContext).updateContactSubscription(from.toString(), Contact.SubscriptionType.FROM_PENDING);
+        Contact contact = ContactModel.get(mApplicationContext)
+                .getContactByJidString(from.toString());
+
+        Contact.SubscriptionType subType = contact.getSubscriptionType();
+
+        if(subType == Contact.SubscriptionType.NONE_NONE)
+        {
+            //--> PENDING_NONE
+            Log.d(TAG,"Current subscription is NONE_NONE, Updating to :" + contact.getTypeStringValue(Contact.SubscriptionType.PENDING_NONE));
+            ContactModel.get(mApplicationContext).updateContactSubscription(from.toString(), Contact.SubscriptionType.PENDING_NONE);
+
+        }else if (subType == Contact.SubscriptionType.NONE_PENDING)
+        {
+            //--> PENDING_PENDING
+            Log.d(TAG,"Current subscription is NONE_PENDING, Updating to :" + contact.getTypeStringValue(Contact.SubscriptionType.PENDING_PENDING));
+            ContactModel.get(mApplicationContext).updateContactSubscription(from.toString(), Contact.SubscriptionType.PENDING_PENDING);
+
+        }else if (subType == Contact.SubscriptionType.NONE_TO)
+        {
+            // -- > PENDING_TO
+            Log.d(TAG,"Current subscription is NONE_TO, Updating to :" + contact.getTypeStringValue(Contact.SubscriptionType.PENDING_TO));
+            ContactModel.get(mApplicationContext).updateContactSubscription(from.toString(), Contact.SubscriptionType.PENDING_TO);
+
+        }else if (subType == Contact.SubscriptionType.PENDING_NONE)
+        {
+            //-->PENDING_NONE
+            Log.d(TAG,"Current subscription is  already in pending state : PENDING_NONE" );
+//            ContactModel.get(mApplicationContext).updateContactSubscription(from.toString(), Contact.SubscriptionType.PENDING_TO);
+
+        }else if (subType == Contact.SubscriptionType.PENDING_PENDING)
+        {
+            //--> PENDING_PENDING
+            Log.d(TAG,"Current subscription is already in pending state : PENDING_PENDING");
+//            ContactModel.get(mApplicationContext).updateContactSubscription(from.toString(), Contact.SubscriptionType.PENDING_TO);
+
+        }else if (subType == Contact.SubscriptionType.PENDING_TO)
+        {
+            //-->PENDING_TO
+            Log.d(TAG,"Current subscription is already in pending state : PENDING_TO" );
+//            ContactModel.get(mApplicationContext).updateContactSubscription(from.toString(), Contact.SubscriptionType.PENDING_TO);
+
+
+        }else if (subType == Contact.SubscriptionType.FROM_NONE)
+        {
+            //-->FROM_NONE
+            Log.d(TAG,"Current subscription is already accepted : FROM_NONE" );
+
+
+
+        }else if (subType == Contact.SubscriptionType.FROM_PENDING)
+        {
+            //-->FROM_PENDING
+            Log.d(TAG,"Current subscription is already accepted : FROM_PENDING" );
+
+
+        }else if (subType == Contact.SubscriptionType.FROM_TO)
+        {
+            //-->FROM_TO
+            Log.d(TAG,"Current subscription is already accepted : FROM_TO" );
+
+        }
+
+        //We do not provide an answer right away, we let the user actively accept or deny this subscription.
+        return null;
+    }
+
+
+    /** PresenceEventListener Overrides */
+    @Override
+    public void presenceAvailable(FullJid address, Presence availablePresence) {
+
+    }
+
+    @Override
+    public void presenceUnavailable(FullJid address, Presence presence) {
+
+    }
+
+    @Override
+    public void presenceError(Jid address, Presence errorPresence) {
+
+    }
+
+    @Override
+    public void presenceSubscribed(BareJid address, Presence subscribedPresence) {
+        Log.d(TAG,"Presence subscribed :" + address.toString());
+
+    }
+
+    @Override
+    public void presenceUnsubscribed(BareJid address, Presence unsubscribedPresence) {
+        Log.d(TAG,"Presence unsubscribed : "+address.toString());
+
+    }
+
+
+    /** PresenceListener Overrides*/
+    @Override
+    public void processPresence(Presence presence) {
+        Log.d(TAG,"Presence from :" +presence.getFrom().toString());
+        Log.d(TAG,"Presence :" + presence.toString());
+
     }
 
 

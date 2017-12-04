@@ -62,5 +62,63 @@
             android:contentDescription="@string/send_message" />
     </RelativeLayout>
 
+    <RelativeLayout
+        android:id="@+id/snackbar"
+        android:layout_above="@id/textsend"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:background="@drawable/snackbar"
+        android:minHeight="48dp"
+        android:visibility="gone"
+        >
+
+        <TextView
+            android:id="@+id/snackbar_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:textColor="#faffffff"
+            android:textSize="15dp"
+            android:text="This user wants to subscribe to your online status."
+             />
+
+        <TextView
+            android:id="@+id/snackbar_action_accept"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_below="@id/snackbar_message"
+            android:layout_centerVertical="true"
+            android:paddingBottom="16dp"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
+            android:paddingTop="16dp"
+            android:textAllCaps="true"
+            android:text="Accept"
+            android:textColor="#fff"
+            android:textStyle="bold" />
+
+
+        <TextView
+            android:id="@+id/snackbar_action_deny"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/snackbar_message"
+            android:layout_toLeftOf="@id/snackbar_action_accept"
+            android:layout_centerVertical="true"
+            android:paddingBottom="16dp"
+            android:paddingLeft="24dp"
+            android:paddingRight="24dp"
+            android:paddingTop="16dp"
+            android:textAllCaps="true"
+            android:text="Deny"
+            android:textColor="#fff"
+            android:textStyle="bold" />
+    </RelativeLayout>
+
 
 </RelativeLayout>

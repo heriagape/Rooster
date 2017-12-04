@@ -51,21 +51,49 @@ public class Contact {
     }
 
     public enum SubscriptionType{
-        NONE,//No presense subscription
-        FROM, // He asked to be friends with me but I haven't accepted yet
-        TO,   // I asked dto be friends with them but they haven't accepted yet
-        BOTH  // We have accepted each other's friendship requests.
+        //Subscription type should catter for the from and to channels. We should simultaneously know the FROM and TO subscription information
+        //FROM  - TO
+        NONE_NONE,//No presence subscription
+        NONE_PENDING,
+        NONE_TO,
+
+        PENDING_NONE,
+        PENDING_PENDING,
+        PENDING_TO,
+
+        FROM_NONE,
+        FROM_PENDING,
+        FROM_TO
+
+
+//        FROM, // They are subscribed to my presence
+//        FROM_PENDING,// They asked to be subscribed to my presence, by I haven't approved or denied yet
+//        TO,   // I am subscribed to their presence
+//        TO_PENDING , // I asked to be subscribed to their presence, but they haven't approved or denied yet
+//        BOTH  // We are subscribed to each others presence
     }
 
     public String getTypeStringValue(SubscriptionType type)
     {
-        if(type== SubscriptionType.NONE)
-            return "NONE";
-        else if(type == SubscriptionType.FROM)
-            return "FROM";
-        else if(type == SubscriptionType.TO)
-            return "TO";
+        if(type== SubscriptionType.NONE_NONE)
+            return "NONE_NONE";
+        else if(type == SubscriptionType.NONE_PENDING)
+            return "NONE_PENDING";
+        else if(type == SubscriptionType.NONE_TO)
+            return "NONE_TO";
+        else if(type == SubscriptionType.PENDING_NONE)
+            return "PENDING_NONE";
+        else if(type == SubscriptionType.PENDING_PENDING)
+            return "PENDING_PENDING";
+        else if(type == SubscriptionType.PENDING_TO)
+            return "PENDING_TO";
+        else if(type == SubscriptionType.FROM_NONE)
+            return "FROM_NONE";
+        else if(type == SubscriptionType.FROM_PENDING)
+            return "FROM_PENDING";
+        else if(type == SubscriptionType.FROM_TO)
+            return "FROM_TO";
         else
-            return "BOTH";
+            return "INDETERMINATE";
     }
 }

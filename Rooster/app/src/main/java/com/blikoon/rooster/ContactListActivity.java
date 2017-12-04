@@ -23,7 +23,19 @@ import com.blikoon.rooster.model.ChatsModel;
 import com.blikoon.rooster.model.Contact;
 import com.blikoon.rooster.model.ContactModel;
 
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.roster.RosterEntries;
+import org.jivesoftware.smack.roster.RosterEntry;
+import org.jivesoftware.smack.roster.packet.RosterPacket;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
+
+import java.util.Collection;
 import java.util.List;
+
+import static android.R.attr.value;
 
 public class ContactListActivity extends AppCompatActivity {
 
@@ -73,15 +85,32 @@ public class ContactListActivity extends AppCompatActivity {
                 //User has clicked the OK button.
                 String inputText = input.getText().toString();
 
-                Log.d(TAG,"Adding Contact :"+inputText);
-                if(ContactModel.get(getApplicationContext()).addContact(new Contact(inputText, Contact.SubscriptionType.BOTH)))
+                if(RoosterConnectionService.getRoosterConnection().sendSubscriptionRequest(inputText))
                 {
-                    Log.d(TAG,"Contact "+inputText +"Added successfuly");
-                    mAdapter.notifyForUiUpdate();
+                    Log.d(TAG,"Adding Contact :"+inputText);
+                    if(ContactModel.get(getApplicationContext()).addContact(new Contact(inputText, Contact.SubscriptionType.FROM_TO)))
+                    {
+                        Log.d(TAG,"Contact "+inputText +"Added successfuly");
+                        mAdapter.notifyForUiUpdate();
+                        //Start the chat activity for the added contact
+                        //Inside here we start the chat activity
+                        Intent intent = new Intent(ContactListActivity.this
+                                ,ChatActivity.class);
+                        intent.putExtra("EXTRA_CONTACT_JID",inputText);
+                        startActivity(intent);
+
+
+                        ///
+                    }else
+                    {
+                        Log.d(TAG,"Could not add Contact "+inputText);
+                    }
+
                 }else
                 {
-                    Log.d(TAG,"Could not add Contact "+inputText);
+                    Log.d(TAG,"Could not send subscription request");
                 }
+
             }
         });
         builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -92,6 +121,58 @@ public class ContactListActivity extends AppCompatActivity {
         });
 
         builder.show();
+    }
+
+    private void sendPresenceAndMessage(String inputText) {
+        Presence subscrPresense = new Presence(Presence.Type.subscribed,"Could you be my friend ?",
+                10, Presence.Mode.available);
+
+        Jid jidTo = null;
+        try {
+            jidTo = JidCreate.from(inputText);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+
+        subscrPresense.setTo(jidTo);
+
+        RoosterConnectionService.getRoosterConnection().sendPresense(subscrPresense);
+
+
+        Message messageTo = new Message(jidTo,"Hello bro");
+
+        //Send them a message
+        RoosterConnectionService.getRoosterConnection().sendMessage(messageTo);
+    }
+
+    private void retrieveUserRoster() {
+        Collection<RosterEntry> entries = RoosterConnectionService.getRoosterConnection().getRosterEntries();
+
+        Log.d(TAG,"The current contact has "+entries.size() + " contacts in his roster");
+
+        for (RosterEntry entry : entries) {
+            RosterPacket.ItemType itemType=   entry.getType();
+
+            Log.d(TAG,"-------------------------------");
+            Log.d(TAG,"Roster entry for  :"+ entry.toString());
+
+            if(itemType == RosterPacket.ItemType.none)
+            {
+                Log.d(TAG,"Subscription is none");
+            }
+            if(itemType == RosterPacket.ItemType.from)
+            {
+                Log.d(TAG,"Subscription is from");
+            }
+            if(itemType == RosterPacket.ItemType.to)
+            {
+                Log.d(TAG,"Subscription is to");
+            }
+            if(itemType == RosterPacket.ItemType.both)
+            {
+                Log.d(TAG,"Subscription is both");
+            }
+        }
     }
 
     private class ContactHolder extends RecyclerView.ViewHolder
@@ -160,11 +241,64 @@ public class ContactListActivity extends AppCompatActivity {
             mContact  = contact;
             if (mContact == null)
             {
-                Log.d(TAG,"Trying to work on a null Chats object ,returning.");
+                Log.d(TAG,"Trying to work on a null Contact object ,returning.");
                 return;
             }
             jidTexView.setText(mContact.getJid());
-            subscriptionTypeTextView.setText("This is the message we exchanged the last time we talked.");
+
+            /**
+             * Code for subscription status display
+             *
+             *          [FROM - TO]
+             *          00---------->NONE_NONE
+             *          0#---------->NONE_PENDING
+             *          01---------->NONE_TO
+             *
+             *          #0---------->PENDING_NONE
+             *          ##---------->PENDING_PENDING
+             *          #1---------->PENDING_TO
+             *
+             *          10---------->FROM_NONE
+             *          1#---------->FROM_PENDING
+             *          11---------->FROM_TO                */
+
+            if(contact.getSubscriptionType() == Contact.SubscriptionType.NONE_NONE)
+            {
+                subscriptionTypeTextView.setText("00");
+            }else if(contact.getSubscriptionType() == Contact.SubscriptionType.NONE_PENDING)
+            {
+                subscriptionTypeTextView.setText("0#");
+            }else if(contact.getSubscriptionType() == Contact.SubscriptionType.NONE_TO)
+            {
+                subscriptionTypeTextView.setText("01");
+            }else if(contact.getSubscriptionType() == Contact.SubscriptionType.PENDING_NONE)
+            {
+                subscriptionTypeTextView.setText("#0");
+            }else if(contact.getSubscriptionType() == Contact.SubscriptionType.PENDING_PENDING)
+            {
+                subscriptionTypeTextView.setText("##");
+            }else if(contact.getSubscriptionType() == Contact.SubscriptionType.PENDING_TO)
+            {
+                subscriptionTypeTextView.setText("#1");
+            }
+
+
+            else if(contact.getSubscriptionType() == Contact.SubscriptionType.FROM_NONE)
+            {
+                subscriptionTypeTextView.setText("10");
+            }
+            else if(contact.getSubscriptionType() == Contact.SubscriptionType.FROM_PENDING)
+            {
+                subscriptionTypeTextView.setText("1#");
+            }
+            else if(contact.getSubscriptionType() == Contact.SubscriptionType.FROM_TO)
+            {
+                subscriptionTypeTextView.setText("11");
+            }
+            else
+            {
+                subscriptionTypeTextView.setText("INDETERMINATE");
+            }
 
         }
     }

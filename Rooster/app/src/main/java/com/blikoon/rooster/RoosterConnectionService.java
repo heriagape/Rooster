@@ -34,7 +34,7 @@ public class RoosterConnectionService extends Service {
     private Thread mThread;
     private Handler mTHandler;//We use this handler to post messages to
     //the background thread.
-    private RoosterConnection mConnection;
+    private static RoosterConnection mConnection;
 
     public RoosterConnectionService() {
 
@@ -55,6 +55,16 @@ public class RoosterConnectionService extends Service {
             return RoosterConnection.LoggedInState.LOGGED_OUT;
         }
         return sLoggedInState;
+    }
+
+    public static RoosterConnection getRoosterConnection()
+    {
+        if(mConnection == null)
+        {
+            return null;
+        }
+        //Return a valid connection object if any
+        return mConnection;
     }
 
     @Nullable

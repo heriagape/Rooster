@@ -22,6 +22,14 @@ import android.widget.TextView;
 
 import com.blikoon.rooster.model.Chats;
 import com.blikoon.rooster.model.ChatsModel;
+import com.blikoon.rooster.model.Contact;
+import com.blikoon.rooster.model.ContactModel;
+
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.packet.Presence;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.util.List;
 
@@ -66,7 +74,7 @@ public class ChatListActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.contact_list, menu);
+        inflater.inflate(R.menu.chat_list, menu);
         return true;
     }
 
@@ -93,10 +101,93 @@ public class ChatListActivity extends AppCompatActivity {
 
         }else if(item.getItemId() == R.id.rooster_add_contact)
         {
-            addContact();
+//            addContact();
+            ContactModel.get(this).updateContactSubscription("musimbate@salama.im", Contact.SubscriptionType.NONE_NONE);
+        }else if(item.getItemId() == R.id.rooster_presence_subscribe)
+        {
+            subscribe();
+            //ContactModel.get(this).updateContactSubscription("gakwaya@salama.im", Contact.SubscriptionType.TO_PENDING);
+        }else if(item.getItemId() == R.id.rooster_presence_unsubscribe)
+        {
+            unsubscribe();
+            //ContactModel.get(this).updateContactSubscription("gakwaya@salama.im", Contact.SubscriptionType.TO);
+        }else if(item.getItemId() == R.id.rooster_presence_subscribed)
+        {
+            subscribed();
+//            ContactModel.get(this).updateContactSubscription("gakwaya@salama.im", Contact.SubscriptionType.FROM_PENDING);
+        }else if(item.getItemId() == R.id.rooster_presence_unsubscribed)
+        {
+            unsubscribed();
+//            ContactModel.get(this).updateContactSubscription("gakwaya@salama.im", Contact.SubscriptionType.FROM);
+        }else if(item.getItemId() == R.id.rooster_send_message)
+        {
+            sendMessage();
+//            ContactModel.get(this).updateContactSubscription("gakwaya@salama.im", Contact.SubscriptionType.BOTH);
         }
 
+
         return super.onOptionsItemSelected(item);
+    }
+
+    private void sendMessage() {
+        Jid jidTo = null;
+        try {
+            jidTo = JidCreate.from("musimbate@salama.im");
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+        Message messageTo = new Message(jidTo,"Hello bro");
+
+        //Send them a message
+        RoosterConnectionService.getRoosterConnection().sendMessage(messageTo);
+    }
+
+    private void unsubscribed() {
+        Jid jidTo = null;
+        try {
+            jidTo = JidCreate.from("musimbate@salama.im");
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+        Presence subscribe = new Presence(jidTo, Presence.Type.unsubscribed);
+        RoosterConnectionService.getRoosterConnection().sendPresense(subscribe);
+
+    }
+
+    private void subscribed() {
+        Jid jidTo = null;
+        try {
+            jidTo = JidCreate.from("musimbate@salama.im");
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+        Presence subscribe = new Presence(jidTo, Presence.Type.subscribed);
+        RoosterConnectionService.getRoosterConnection().sendPresense(subscribe);
+
+    }
+
+    private void unsubscribe() {
+        Jid jidTo = null;
+        try {
+            jidTo = JidCreate.from("musimbate@salama.im");
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+        Presence subscribe = new Presence(jidTo, Presence.Type.unsubscribe);
+        RoosterConnectionService.getRoosterConnection().sendPresense(subscribe);
+
+    }
+
+    private void subscribe() {
+        Jid jidTo = null;
+        try {
+            jidTo = JidCreate.from("musimbate@salama.im");
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+        Presence subscribe = new Presence(jidTo, Presence.Type.subscribe);
+        RoosterConnectionService.getRoosterConnection().sendPresense(subscribe);
+
     }
 
     @Override

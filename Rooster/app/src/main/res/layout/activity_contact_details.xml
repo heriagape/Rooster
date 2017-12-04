@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/list_activity_root_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+
+    android:paddingBottom="@dimen/activity_vertical_margin"
+
+    tools:context="com.blikoon.rooster.ContactDetailsActivity">
+
+    <ImageView
+        android:id="@+id/contact_details_user_profile"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:src="@drawable/ic_profile"
+        android:layout_centerHorizontal="true"
+        />
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/subscription_check_boxes"
+        android:layout_below="@id/contact_details_user_profile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <CheckBox
+                android:id="@+id/them_to_me"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=" John can see my online status"
+                />
+            <CheckBox
+                android:id="@+id/me_to_tem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="I can see John's online status"
+                android:layout_below="@id/them_to_me"
+                />
+
+
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/request_presence_box"
+        android:layout_below="@id/subscription_check_boxes"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/request_presence_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Request to see John's online status"
+                />
+            <Button
+                android:id="@+id/request_presence_button"
+                android:layout_below="@id/request_presence_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Request"
+                />
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/subscription_request_reaction_box"
+        android:layout_below="@id/request_presence_box"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true">
+
+            <TextView
+                android:id="@+id/reaction_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="John has requested to see your online status"/>
+
+            <LinearLayout
+                android:layout_below="@id/reaction_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                >
+
+                <Button
+                    android:id="@+id/subscription_accept"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Accept"/>
+
+                <Button
+                    android:id="@+id/subscription_deny"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="deny"/>
+
+
+            </LinearLayout>
+
+
+
+
+
+        </RelativeLayout>
+
+
+    </android.support.v7.widget.CardView>
+
+
+
+
+
+
+</RelativeLayout>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/rooster_logout"
+        android:title="@string/rooster_logout"
+       />
+
+    <item
+        android:id="@+id/rooster_add_contact"
+        android:title="@string/rooster_add_contact"
+        />
+
+    <item
+        android:id="@+id/rooster_presence_subscribe"
+        android:title="@string/rooster_presence_subscribe"
+        />
+
+    <item
+        android:id="@+id/rooster_presence_unsubscribe"
+        android:title="@string/rooster_presence_unsubscribe"
+        />
+
+    <item
+        android:id="@+id/rooster_presence_subscribed"
+        android:title="@string/rooster_presence_subscribed"
+        />
+
+    <item
+        android:id="@+id/rooster_presence_unsubscribed"
+        android:title="@string/rooster_presence_unsubscribed"
+        />
+
+    <item
+        android:id="@+id/rooster_send_message"
+        android:title="@string/rooster_send_message"
+        />
+
+
+
+</menu>

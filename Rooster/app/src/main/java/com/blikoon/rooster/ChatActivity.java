@@ -9,19 +9,26 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
 import com.blikoon.rooster.adapters.ChatMessagesAdapter;
 import com.blikoon.rooster.model.ChatMessage;
 import com.blikoon.rooster.model.ChatMessageModel;
+import com.blikoon.rooster.model.Contact;
+import com.blikoon.rooster.model.ContactModel;
 import com.blikoon.rooster.ui.InsetDecoration;
 import com.blikoon.rooster.ui.KeyboardUtil;
 
 import org.acra.ACRA;
+import org.w3c.dom.Text;
 
 public class ChatActivity extends ActionBarActivity implements
         ChatMessagesAdapter.OnItemClickListener,ChatMessagesAdapter.OnInformRecyclerViewToScrollDownListener,
@@ -38,6 +45,10 @@ public class ChatActivity extends ActionBarActivity implements
     private EditText textInputTextEdit;
     private ImageButton textSendButton;
     private String counterpartJid;
+
+    private View snackbar;
+    private TextView snackBarActionAccept;
+    private TextView snackBarActionDeny;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,8 +118,138 @@ public class ChatActivity extends ActionBarActivity implements
             }
         });
 
+
+
+        snackbar = findViewById(R.id.snackbar);
+        //Get the subscription data and decide whether or not to show the snackbar.
+        Log.d(TAG,"Getting contact data for :" + counterpartJid);
+        Contact contact = ContactModel.get(this).getContactByJidString(counterpartJid);
+        Log.d(TAG,"We got a contact with JID :" + contact.getJid());
+
+        if( contact.getSubscriptionType() == Contact.SubscriptionType.PENDING_NONE ||
+                contact.getSubscriptionType() == Contact.SubscriptionType.PENDING_PENDING ||
+                contact.getSubscriptionType() == Contact.SubscriptionType.PENDING_TO)
+        {
+            Log.d(TAG," Your subscription to "+ contact.getJid() + " is in the FROM direction is in pending state. Should show the snackbar");
+            snackbar.setVisibility(View.VISIBLE);
+        }else
+        {
+            Log.d(TAG,"Your subscription is not FROM_PENDING");
+        }
+
+        snackBarActionAccept = (TextView) findViewById(R.id.snackbar_action_accept);
+        snackBarActionAccept.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //User accepts presence subscription
+                Log.d(TAG," Accept presence subscription from :" + counterpartJid);
+                RoosterConnectionService.getRoosterConnection().subscribed(counterpartJid);
+                //Update the user subscription status
+
+                Contact contact = ContactModel.get(getApplicationContext())
+                        .getContactByJidString(counterpartJid);
+
+                Contact.SubscriptionType subType = contact.getSubscriptionType();
+
+                if(subType == Contact.SubscriptionType.NONE_NONE)
+                {
+                    //--> FROM_NONE
+                    Log.d(TAG,"NONE_NONE :The contact sub type is :" + contact.getTypeStringValue(subType));
+                    ContactModel.get(getApplicationContext()).updateContactSubscription(counterpartJid, Contact.SubscriptionType.FROM_NONE);
+
+
+                }else if (subType == Contact.SubscriptionType.NONE_PENDING)
+                {
+                    //--> FROM_PENDING
+                    Log.d(TAG,"NONE_PENDING :The contact sub type is :" + contact.getTypeStringValue(subType));
+                    ContactModel.get(getApplicationContext()).updateContactSubscription(counterpartJid, Contact.SubscriptionType.FROM_PENDING);
+
+
+                }else if (subType == Contact.SubscriptionType.NONE_TO)
+                {
+                    // -- > FROM_TO
+                    Log.d(TAG,"NONE_TO :The contact sub type is :" + contact.getTypeStringValue(subType));
+                    ContactModel.get(getApplicationContext()).updateContactSubscription(counterpartJid, Contact.SubscriptionType.FROM_TO);
+
+
+                }else if (subType == Contact.SubscriptionType.PENDING_NONE)
+                {
+                    //-->FROM_NONE
+                    Log.d(TAG,"PENDING_NONE :The contact sub type is :" + contact.getTypeStringValue(subType));
+                    ContactModel.get(getApplicationContext()).updateContactSubscription(counterpartJid, Contact.SubscriptionType.FROM_NONE);
+
+
+                }else if (subType == Contact.SubscriptionType.PENDING_PENDING)
+                {
+                    //--> FROM_PENDING
+                    Log.d(TAG,"PENDING_PENDING :The contact sub type is :" + contact.getTypeStringValue(subType));
+                    ContactModel.get(getApplicationContext()).updateContactSubscription(counterpartJid, Contact.SubscriptionType.FROM_PENDING);
+
+
+                }else if (subType == Contact.SubscriptionType.PENDING_TO)
+                {
+                    //-->FROM_TO
+                    Log.d(TAG,"PENDING_TO :The contact sub type is :" + contact.getTypeStringValue(subType));
+                    ContactModel.get(getApplicationContext()).updateContactSubscription(counterpartJid, Contact.SubscriptionType.FROM_TO);
+
+
+
+                }else if (subType == Contact.SubscriptionType.FROM_NONE)
+                {
+                    //-->FROM_NONE
+                    Log.d(TAG,"FROM_NONE :The contact sub type is :" + contact.getTypeStringValue(subType));
+                    Log.d(TAG,"Contact subscription already accepted :FROM_NONE");
+
+
+                }else if (subType == Contact.SubscriptionType.FROM_PENDING)
+                {
+                    //-->FROM_PENDING
+                    Log.d(TAG,"FROM_PENDING :The contact sub type is :" + contact.getTypeStringValue(subType));
+                    Log.d(TAG,"Contact subscription already accepted :FROM_PENDING");
+
+
+
+                }else if (subType == Contact.SubscriptionType.FROM_TO)
+                {
+                    //-->FROM_TO
+                    Log.d(TAG,"FROM_TO :The contact sub type is :" + contact.getTypeStringValue(subType));
+                    Log.d(TAG,"Contact subscription already accepted :FROM_TO");
+                }
+            }
+        });
+
+        snackBarActionDeny = (TextView) findViewById(R.id.snackbar_action_deny);
+        snackBarActionDeny.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //User denies presence subscription
+                Log.d(TAG," Deny presence subscription from :" + counterpartJid);
+                RoosterConnectionService.getRoosterConnection().unsubscribed(counterpartJid);
+
+            }
+        });
+
         KeyboardUtil.setKeyboardVisibilityListener(this,this);
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.chat, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if(item.getItemId() == R.id.contact_details)
+        {
+            Intent i = new Intent(this,ContactDetailsActivity.class);
+            startActivity(i);
+        }
+
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

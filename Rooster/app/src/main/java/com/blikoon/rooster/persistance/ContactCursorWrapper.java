@@ -23,16 +23,26 @@ public class ContactCursorWrapper extends CursorWrapper {
 
         Contact.SubscriptionType subscriptionType = null;
 
-        if (subscriptionTypeString.equals("NONE")) {
-            subscriptionType = Contact.SubscriptionType.NONE;
-        } else if (subscriptionTypeString.equals("FROM")) {
-            subscriptionType = Contact.SubscriptionType.FROM;
+        if (subscriptionTypeString.equals("NONE_NONE")) {
+            subscriptionType = Contact.SubscriptionType.NONE_NONE;
+        } else if (subscriptionTypeString.equals("NONE_PENDING")) {
+            subscriptionType = Contact.SubscriptionType.NONE_PENDING;
+        } else if (subscriptionTypeString.equals("NONE_TO")) {
+            subscriptionType = Contact.SubscriptionType.NONE_TO;
+        } else if (subscriptionTypeString.equals("PENDING_NONE")) {
+            subscriptionType = Contact.SubscriptionType.PENDING_NONE;
+        }else if (subscriptionTypeString.equals("PENDING_PENDING")) {
+            subscriptionType = Contact.SubscriptionType.PENDING_PENDING;
+        } else if (subscriptionTypeString.equals("PENDING_TO")) {
+            subscriptionType = Contact.SubscriptionType.PENDING_TO;
         }
-        else if (subscriptionTypeString.equals("TO")) {
-            subscriptionType = Contact.SubscriptionType.TO;
-        }
-        else if (subscriptionTypeString.equals("BOTH")) {
-            subscriptionType = Contact.SubscriptionType.BOTH;
+
+        else if (subscriptionTypeString.equals("FROM_NONE")) {
+            subscriptionType = Contact.SubscriptionType.FROM_NONE;
+        }else if (subscriptionTypeString.equals("FROM_PENDING")) {
+            subscriptionType = Contact.SubscriptionType.FROM_PENDING;
+        } else if (subscriptionTypeString.equals("FROM_TO")) {
+            subscriptionType = Contact.SubscriptionType.FROM_TO;
         }
 
         Contact contact = new Contact(jid, subscriptionType);
