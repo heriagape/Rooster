@@ -20,7 +20,7 @@ android {
 }
 
 ext {
-    smackVersion = '4.2.1'
+    smackVersion = '4.2.2'
 }
 
 //Ge rid of problem described here : https://stackoverflow.com/questions/31049735/can-not-run-application-below-lollipop
@@ -36,13 +36,8 @@ dependencies {
 
     compile "org.igniterealtime.smack:smack-tcp:$smackVersion"
     compile "org.igniterealtime.smack:smack-experimental:$smackVersion"
-    compile("org.igniterealtime.smack:smack-android:$smackVersion") {
-        // exclude smack-omemo due to bad packaging
-        exclude module: 'smack-omemo'
-        exclude module: 'smack-omemo-signal'
-    }
-
-
+    compile"org.igniterealtime.smack:smack-android:$smackVersion"
+    
     compile 'com.github.ge0rg:MemorizingTrustManager:9e30ffdf7d'
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
