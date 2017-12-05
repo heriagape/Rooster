@@ -3,6 +3,9 @@ package com.blikoon.rooster;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
@@ -16,6 +19,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.blikoon.rooster.model.Chats;
@@ -180,12 +184,14 @@ public class ContactListActivity extends AppCompatActivity {
         private TextView jidTexView;
         private TextView subscriptionTypeTextView;
         private Contact mContact;
+        private ImageView profile_image;
         public ContactHolder(View itemView)
         {
             super(itemView);
 
             jidTexView = (TextView) itemView.findViewById(R.id.contact_jid);
             subscriptionTypeTextView = (TextView) itemView.findViewById(R.id.suscription_type);
+            profile_image = (ImageView) itemView.findViewById(R.id.profile_contact);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -245,6 +251,21 @@ public class ContactListActivity extends AppCompatActivity {
                 return;
             }
             jidTexView.setText(mContact.getJid());
+
+            //Profile image
+            RoosterConnection rc = RoosterConnectionService.getRoosterConnection();
+            if( rc != null)
+            {
+                byte[] image_byte_array = rc.getUserAvatar(contact.getJid());
+                if( image_byte_array != null)
+                {
+                    // Retrieve the avatar and put it in the profile image view
+                    Drawable image = new BitmapDrawable(getResources(), BitmapFactory.decodeByteArray(image_byte_array, 0, image_byte_array.length));
+                    profile_image.setImageDrawable(image);
+                }
+
+            }
+
 
             /**
              * Code for subscription status display

@@ -3,6 +3,10 @@ package com.blikoon.rooster;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.provider.ContactsContract;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -18,6 +22,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.blikoon.rooster.model.Chats;
@@ -25,8 +30,13 @@ import com.blikoon.rooster.model.ChatsModel;
 import com.blikoon.rooster.model.Contact;
 import com.blikoon.rooster.model.ContactModel;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smackx.vcardtemp.packet.VCard;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
@@ -102,7 +112,7 @@ public class ChatListActivity extends AppCompatActivity {
         }else if(item.getItemId() == R.id.rooster_add_contact)
         {
 //            addContact();
-            ContactModel.get(this).updateContactSubscription("musimbate@salama.im", Contact.SubscriptionType.NONE_NONE);
+//            ContactModel.get(this).updateContactSubscription("musimbate@salama.im", Contact.SubscriptionType.NONE_NONE);
         }else if(item.getItemId() == R.id.rooster_presence_subscribe)
         {
             subscribe();
@@ -123,6 +133,11 @@ public class ChatListActivity extends AppCompatActivity {
         {
             sendMessage();
 //            ContactModel.get(this).updateContactSubscription("gakwaya@salama.im", Contact.SubscriptionType.BOTH);
+        }else if( item.getItemId() == R.id.rooster_me)
+        {
+            //Start the MeActivity
+            Intent i = new Intent(this,MeActivity.class);
+            startActivity(i);
         }
 
 
@@ -243,6 +258,7 @@ public class ChatListActivity extends AppCompatActivity {
         private TextView contactTextView;
         private TextView messageAbstractTextView;
         private TextView timestampTextView;
+        private ImageView profileImage;
         private Chats mChat;
         public ChatHolder(View itemView)
         {
@@ -251,6 +267,7 @@ public class ChatListActivity extends AppCompatActivity {
             contactTextView = (TextView) itemView.findViewById(R.id.contact_jid);
             messageAbstractTextView = (TextView) itemView.findViewById(R.id.message_abstract);
             timestampTextView = (TextView) itemView.findViewById(R.id.text_message_timestamp);
+            profileImage = (ImageView) itemView.findViewById(R.id.profile);
 
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -279,6 +296,18 @@ public class ChatListActivity extends AppCompatActivity {
             messageAbstractTextView.setText("This is the message we exchanged the last time we talked.");
             timestampTextView.setText("12:10 AM");
 
+            RoosterConnection rc = RoosterConnectionService.getRoosterConnection();
+            if( rc != null)
+            {
+                byte[] profile_image_byte_array = rc.getUserAvatar(mChat.getJid());
+                if( profile_image_byte_array  != null)
+                {
+                    // If there is a profile image in the avatar, set it to the view
+                    Drawable image = new BitmapDrawable(getResources(),
+                            BitmapFactory.decodeByteArray(profile_image_byte_array, 0, profile_image_byte_array.length));
+                    profileImage.setImageDrawable(image);
+                }
+            }
         }
     }
 

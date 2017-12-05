@@ -36,4 +36,7 @@
     <string name="rooster_send_message">Send Message</string>
     <string name="title_activity_contact_details">ContactDetailsActivity</string>
     <string name="contact_details">Contact Details</string>
+    <string name="me_text">Me</string>
+    <string name="title_activity_me">Me</string>
+    <string name="action_settings">Settings</string>
 </resources>

@@ -10,7 +10,7 @@
     android:layout_height="wrap_content">
 
     <ImageView
-        android:id="@+id/profile"
+        android:id="@+id/profile_contact"
         android:layout_width="72dp"
         android:layout_height="72dp"
         android:src="@drawable/ic_profile"/>
@@ -20,7 +20,7 @@
         android:id="@+id/message_body"
         android:layout_width="match_parent"
         android:layout_height="90dp"
-        android:layout_toRightOf="@id/profile"
+        android:layout_toRightOf="@id/profile_contact"
         >
 
 

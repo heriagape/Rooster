@@ -36,6 +36,11 @@
         android:title="@string/rooster_send_message"
         />
 
+    <item
+        android:id="@+id/rooster_me"
+        android:title="@string/me_text"
+        />
+
 
 
 </menu>

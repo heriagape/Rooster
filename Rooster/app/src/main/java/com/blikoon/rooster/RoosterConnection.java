@@ -5,6 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
@@ -53,6 +57,8 @@ import org.jivesoftware.smack.util.dns.minidns.MiniDnsResolver;
 import org.jivesoftware.smackx.debugger.android.AndroidDebugger;
 import org.jivesoftware.smackx.ping.PingFailedListener;
 import org.jivesoftware.smackx.ping.PingManager;
+import org.jivesoftware.smackx.vcardtemp.VCardManager;
+import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jxmpp.jid.BareJid;
 import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.FullJid;
@@ -60,11 +66,14 @@ import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -90,9 +99,15 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
     private  final String mUsername;
     private  final String mPassword;
     private  final String mServiceName;
+
+    public XMPPTCPConnection getmConnection() {
+        return mConnection;
+    }
+
     private XMPPTCPConnection mConnection;
     private BroadcastReceiver uiThreadMessageReceiver;//Receives messages from the ui thread.
     private PingManager pingManager;
+    private VCardManager vCardManager;
 
     private final static int CONNECT_TIMEOUT = 1000 * 60;
 
@@ -395,6 +410,9 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
 
         mConnection = new XMPPTCPConnection(mConfig.build());
 
+        vCardManager  = VCardManager.getInstanceFor(mConnection);
+
+
 
 
         mConnection.addConnectionListener(this);
@@ -492,6 +510,104 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
         reconnectionManager.enableAutomaticReconnection();
 
     }
+
+
+
+    public byte [] getSelfAvatar()
+    {
+        VCard vCard =  null;
+
+        if(vCardManager != null)
+        {
+            try {
+                vCard = vCardManager.loadVCard();
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        if( vCard != null)
+        {
+            return vCard.getAvatar();
+        }
+        return null;
+
+    }
+
+    /** Sets the avatar for the currently connected user*/
+    public boolean setSelfAvatar( byte[] image)
+    {
+        //Get the avatar for display
+        VCard vCard = new VCard();
+        vCard.setAvatar(image);
+
+        if( vCardManager != null)
+        {
+            try {
+                vCardManager.saveVCard(vCard);
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+                return false;
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+                return false;
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+                return false;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                return false;
+            }
+            return  true;
+        }else
+        {
+            return false;
+        }
+    }
+
+
+    public byte[] getUserAvatar ( String user)
+    {
+        EntityBareJid jid = null;
+        try {
+            jid =JidCreate.entityBareFrom(user);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+
+        VCard vCard =  null;
+
+        if(vCardManager != null)
+        {
+            try {
+                vCard = vCardManager.loadVCard(jid);
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        if( vCard != null)
+        {
+            return vCard.getAvatar();
+        }
+        return null;
+
+    }
+
 
     public Collection<RosterEntry> getRosterEntries()
     {
