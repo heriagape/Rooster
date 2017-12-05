@@ -111,6 +111,7 @@ public class ChatListActivity extends AppCompatActivity {
 
         }else if(item.getItemId() == R.id.rooster_add_contact)
         {
+//            RoosterConnectionService.getRoosterConnection().saveUserAvatarsLocaly();
 //            addContact();
 //            ContactModel.get(this).updateContactSubscription("musimbate@salama.im", Contact.SubscriptionType.NONE_NONE);
         }else if(item.getItemId() == R.id.rooster_presence_subscribe)
@@ -297,17 +298,33 @@ public class ChatListActivity extends AppCompatActivity {
             timestampTextView.setText("12:10 AM");
 
             RoosterConnection rc = RoosterConnectionService.getRoosterConnection();
-            if( rc != null)
+//            if( rc != null)
+//            {
+//                byte[] profile_image_byte_array = rc.getUserAvatar(mChat.getJid());
+//                if( profile_image_byte_array  != null)
+//                {
+//                    // If there is a profile image in the avatar, set it to the view
+//                    Drawable image = new BitmapDrawable(getResources(),
+//                            BitmapFactory.decodeByteArray(profile_image_byte_array, 0, profile_image_byte_array.length));
+//                    profileImage.setImageDrawable(image);
+//                }
+//            }
+
+            if(rc != null)
             {
-                byte[] profile_image_byte_array = rc.getUserAvatar(mChat.getJid());
-                if( profile_image_byte_array  != null)
+                String imageAbsPath = rc.getProfileImageAbsolutePath(mChat.getJid());
+                if ( imageAbsPath != null)
                 {
-                    // If there is a profile image in the avatar, set it to the view
-                    Drawable image = new BitmapDrawable(getResources(),
-                            BitmapFactory.decodeByteArray(profile_image_byte_array, 0, profile_image_byte_array.length));
-                    profileImage.setImageDrawable(image);
+                    Drawable d = Drawable.createFromPath(imageAbsPath);
+                    profileImage.setImageDrawable(d);
                 }
+
             }
+
+
+
+
+
         }
     }
 

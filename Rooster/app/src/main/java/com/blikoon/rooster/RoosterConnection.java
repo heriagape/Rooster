@@ -7,11 +7,13 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -68,6 +70,7 @@ import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -435,6 +438,8 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
 
 
             updateRosterDataFromServer();
+            //Cache the avatars for fast local use
+            saveUserAvatarsLocaly();
 
             //Start the ping repeat timer here.
             startPinging();
@@ -602,10 +607,45 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
 
         if( vCard != null)
         {
+            Log.d(TAG,"The mime type of the avatar is :" + vCard.getAvatarMimeType());
             return vCard.getAvatar();
         }
         return null;
 
+    }
+
+    public VCard getUserVCard ( String user)
+    {
+        EntityBareJid jid = null;
+        try {
+            jid =JidCreate.entityBareFrom(user);
+        } catch (XmppStringprepException e) {
+            e.printStackTrace();
+        }
+
+        VCard vCard =  null;
+
+        if(vCardManager != null)
+        {
+            try {
+                vCard = vCardManager.loadVCard(jid);
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        if( vCard != null)
+        {
+            return vCard;
+        }
+        return null;
     }
 
 
@@ -710,16 +750,9 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
             RosterPacket.ItemType itemType=   entry.getType();
             String stringItemType = getRosterItemTypeString(itemType);
 
-            Log.d(TAG,"-------------------------------");
-            Log.d(TAG,"Roster entry for  :"+ entry.toString());
-            Log.d(TAG,"Subscription type is :" + stringItemType);
-            Log.d(TAG,"getJid.toString() :" + entry.getJid().toString());
-
             //Update data in the db
             //Get all the contacts
             List<String> contacts = ContactModel.get(mApplicationContext).getContactJidStrings();
-
-
 
             if( !contacts.contains(entry.getJid().toString()))
             {
@@ -727,23 +760,139 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
                 if(ContactModel.get(mApplicationContext).addContact(new Contact(entry.getJid().toString(),
                         rosterItemTypeToContactSubscriptionType(itemType))))
                 {
-                    Log.d(TAG,"Contact "+entry.getJid().toString() +"Added successfuly");
+                    Log.d(TAG,"Contact "+entry.getJid().toString() +"Added successfully");
                     //mAdapter.notifyForUiUpdate();
                 }else
                 {
                     Log.d(TAG,"Could not add Contact "+entry.getJid().toString());
                 }
             }
+        }
+    }
 
+
+    /** Fetches the avatars from the server and saves them in a local directory on external storage for
+     * use in App without needing to user network all the time. */
+    public void saveUserAvatarsLocaly ()
+    {
+        File rootPath = new File(mApplicationContext.getExternalFilesDir("DIRECTORY_PICTURES") , "profile_pictures");
+
+        //Create the root Dir if it is not there
+        if (!rootPath.exists()) {
+            if(rootPath.mkdirs())
+            {
+                Log.d(TAG,"profile_pictures directory created successfully :"+ rootPath.getAbsolutePath());
+            }else
+            {
+                Log.d(TAG,"Could not create profile_pictures directory :"+ rootPath.getAbsolutePath());
+            }
         }
 
-        //For each entry
+        //Write the actual data
+        List<String> contacts = ContactModel.get(mApplicationContext).getContactJidStrings();
+        for ( String contact : contacts)
+        {
+            VCard  vCard = getUserVCard(contact);
+            String imageMimeType = null;
+            String imageExtension = null;
+            Bitmap.CompressFormat format = null;
 
-            //If not in db already
+            if( vCard != null)
+            {
+                byte [] image_data = vCard.getAvatar();
+                imageMimeType = vCard.getAvatarMimeType();
+                if( image_data != null)
+                {
+                    Log.d(TAG,"Found an avatar for user : "+ contact);
 
-                //Add it
+                    if ( imageMimeType.equals("image/jpeg"))
+                    {
+                        Log.d(TAG,"The image mime type is JPEG");
+                        imageExtension = "jpeg";
+                        format = Bitmap.CompressFormat.JPEG;
+                    }else if( imageMimeType.equals("image/jpg"))
+                    {
+                        Log.d(TAG,"The image mime type is JPG");
+                        imageExtension = "jpg";
+                        format = Bitmap.CompressFormat.JPEG;
+                    }else if( imageMimeType.equals("image/png"))
+                    {
+                        Log.d(TAG,"The image mime type is PNG");
+                        imageExtension = "png";
+                        format = Bitmap.CompressFormat.PNG;
+                    }
 
+                    Bitmap bitmap = BitmapFactory.decodeByteArray(image_data, 0, image_data.length);
+
+                File file = new File (rootPath, contact+"."+imageExtension);
+                if (file.exists ())
+                    file.delete ();
+                try {
+                    FileOutputStream out = new FileOutputStream(file);
+                    bitmap.compress(format, 90, out);
+                    out.flush();
+                    out.close();
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                Log.d(TAG,"Image write operation successful.File :" + file.getAbsolutePath());
+
+                }else
+                {
+                    Log.d(TAG,"Could not get avatar for user : "+contact);
+                }
+            }
+        }
     }
+
+
+
+    /** This function assumes that the avatars have been previously saved by a call to saveUserAvatarsLocaly ().
+     * You should make sure it has been called at least once before you call this method. */
+    public String getProfileImageAbsolutePath( String jid)
+    {
+        File rootPath = new File(mApplicationContext.getExternalFilesDir("DIRECTORY_PICTURES") , "profile_pictures");
+
+        //Create the root Dir if it is not there
+        if (!rootPath.exists()) {
+            if(rootPath.mkdirs())
+            {
+                Log.d(TAG,"profile_pictures directory created successfully :"+ rootPath.getAbsolutePath());
+            }else
+            {
+                Log.d(TAG,"Could not create profile_pictures directory :"+ rootPath.getAbsolutePath());
+            }
+        }
+
+        /**TO DO  : FIND A BETTER CONSTRUCT TO USE HERE AND GET RID OF THESE NESTED IFs **/
+
+        File file = new File (rootPath, jid+".jpeg");
+        if( !file.exists())
+        {
+            file = new File ( rootPath, jid + ".jpg");
+            if ( !file.exists())
+            {
+                file = new File(rootPath,jid+".png");
+                if ( !file.exists())
+                {
+                    return null;
+                }else
+                {
+                    return file.getAbsolutePath();
+                }
+
+            }else
+            {
+                return file.getAbsolutePath();
+            }
+        }else
+        {
+            return file.getAbsolutePath();
+        }
+    }
+
+
 
     private String getRosterItemTypeString(RosterPacket.ItemType itemType)
     {

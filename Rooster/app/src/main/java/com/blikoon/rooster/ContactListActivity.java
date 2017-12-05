@@ -254,17 +254,28 @@ public class ContactListActivity extends AppCompatActivity {
 
             //Profile image
             RoosterConnection rc = RoosterConnectionService.getRoosterConnection();
-            if( rc != null)
+//            if( rc != null)
+//            {
+//                byte[] image_byte_array = rc.getUserAvatar(contact.getJid());
+//                if( image_byte_array != null)
+//                {
+//                    // Retrieve the avatar and put it in the profile image view
+//                    Drawable image = new BitmapDrawable(getResources(), BitmapFactory.decodeByteArray(image_byte_array, 0, image_byte_array.length));
+//                    profile_image.setImageDrawable(image);
+//                }
+//
+//            }
+            if(rc != null)
             {
-                byte[] image_byte_array = rc.getUserAvatar(contact.getJid());
-                if( image_byte_array != null)
+                String imageAbsPath = rc.getProfileImageAbsolutePath(mContact.getJid());
+                if ( imageAbsPath != null)
                 {
-                    // Retrieve the avatar and put it in the profile image view
-                    Drawable image = new BitmapDrawable(getResources(), BitmapFactory.decodeByteArray(image_byte_array, 0, image_byte_array.length));
-                    profile_image.setImageDrawable(image);
+                    Drawable d = Drawable.createFromPath(imageAbsPath);
+                    profile_image.setImageDrawable(d);
                 }
 
             }
+
 
 
             /**
