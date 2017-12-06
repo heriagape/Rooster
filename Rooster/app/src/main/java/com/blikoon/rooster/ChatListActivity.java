@@ -111,7 +111,7 @@ public class ChatListActivity extends AppCompatActivity {
 
         }else if(item.getItemId() == R.id.rooster_add_contact)
         {
-//            RoosterConnectionService.getRoosterConnection().saveUserAvatarsLocaly();
+           RoosterConnectionService.getRoosterConnection().getRosterEntries();
 //            addContact();
 //            ContactModel.get(this).updateContactSubscription("musimbate@salama.im", Contact.SubscriptionType.NONE_NONE);
         }else if(item.getItemId() == R.id.rooster_presence_subscribe)

@@ -241,7 +241,9 @@ public class ChatActivity extends ActionBarActivity implements
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId() == R.id.contact_details)
         {
+
             Intent i = new Intent(this,ContactDetailsActivity.class);
+            i.putExtra("EXTRA_COUNTERPART_JID",counterpartJid);
             startActivity(i);
         }
 

@@ -427,6 +427,7 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
         mRoster.setSubscriptionMode(Roster.SubscriptionMode.manual);
         mRoster.addRosterListener(this);
         mRoster.addSubscribeListener(this);
+        mRoster.addPresenceEventListener(this);
 
 
 
@@ -652,6 +653,31 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
     public Collection<RosterEntry> getRosterEntries()
     {
         Collection<RosterEntry> entries = mRoster.getEntries();
+        Log.d(TAG,"The current contact has "+entries.size() + " contacts in his roster");
+
+        for (RosterEntry entry : entries) {
+            RosterPacket.ItemType itemType=   entry.getType();
+
+            Log.d(TAG,"-------------------------------");
+            Log.d(TAG,"Roster entry for  :"+ entry.toString());
+
+            if(itemType == RosterPacket.ItemType.none)
+            {
+                Log.d(TAG,"Subscription is none");
+            }
+            if(itemType == RosterPacket.ItemType.from)
+            {
+                Log.d(TAG,"Subscription is from");
+            }
+            if(itemType == RosterPacket.ItemType.to)
+            {
+                Log.d(TAG,"Subscription is to");
+            }
+            if(itemType == RosterPacket.ItemType.both)
+            {
+                Log.d(TAG,"Subscription is both");
+            }
+        }
 
         return  entries;
     }
@@ -1240,12 +1266,84 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
     @Override
     public void presenceSubscribed(BareJid address, Presence subscribedPresence) {
         Log.d(TAG,"Presence subscribed :" + address.toString());
+        String contactJid = address.toString();
+        //WHEN YOU RECEIVE A SUBSCRIBED, YOU BECOME OF SUBSCRIPTION : TO IN THE TO DIRECTION
+        Contact contact = ContactModel.get(mApplicationContext).getContactByJidString(contactJid);
+        Contact.SubscriptionType subType = contact.getSubscriptionType();
+        if(subType == Contact.SubscriptionType.NONE_NONE)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.NONE_TO);
+
+        }else if (subType == Contact.SubscriptionType.NONE_PENDING)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.NONE_TO);
+
+        }else if (subType == Contact.SubscriptionType.NONE_TO)
+        {
+            //Nothing relevant to do here
+        }else if (subType == Contact.SubscriptionType.PENDING_NONE)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.PENDING_TO);
+
+        }else if (subType == Contact.SubscriptionType.PENDING_PENDING)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.PENDING_TO);
+        }else if (subType == Contact.SubscriptionType.PENDING_TO)
+        {
+            //Nothing relevant to do here
+        }else if (subType == Contact.SubscriptionType.FROM_NONE)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.FROM_TO);
+
+        }else if (subType == Contact.SubscriptionType.FROM_PENDING)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.FROM_TO);
+        }else if (subType == Contact.SubscriptionType.FROM_TO)
+        {
+            //Nothing relevant to do here
+        }
 
     }
 
     @Override
     public void presenceUnsubscribed(BareJid address, Presence unsubscribedPresence) {
         Log.d(TAG,"Presence unsubscribed : "+address.toString());
+        //WHEN YOU RECEIVE AN UNSUBSCRIBED, YOU BE COME OF SUBSCRIPTION : NONE IN THE FROM DIRECTION
+        String contactJid = address.toString();
+        Contact contact = ContactModel.get(mApplicationContext).getContactByJidString(contactJid);
+        Contact.SubscriptionType subType = contact.getSubscriptionType();
+        if(subType == Contact.SubscriptionType.NONE_NONE)
+        {
+
+            //Nothing relevant to do here
+        }else if (subType == Contact.SubscriptionType.NONE_PENDING)
+        {
+
+            //Nothing relevant to do here
+        }else if (subType == Contact.SubscriptionType.NONE_TO)
+        {
+            //Nothing relevant to do here
+        }else if (subType == Contact.SubscriptionType.PENDING_NONE)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.NONE_NONE);
+
+        }else if (subType == Contact.SubscriptionType.PENDING_PENDING)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.NONE_PENDING);
+        }else if (subType == Contact.SubscriptionType.PENDING_TO)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.NONE_TO);
+        }else if (subType == Contact.SubscriptionType.FROM_NONE)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.NONE_NONE);
+
+        }else if (subType == Contact.SubscriptionType.FROM_PENDING)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.NONE_PENDING);
+        }else if (subType == Contact.SubscriptionType.FROM_TO)
+        {
+            ContactModel.get(mApplicationContext).updateContactSubscription(contactJid, Contact.SubscriptionType.NONE_TO);
+        }
 
     }
 
