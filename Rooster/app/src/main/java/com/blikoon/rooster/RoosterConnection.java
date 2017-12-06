@@ -748,7 +748,7 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
 
         for (RosterEntry entry : entries) {
             RosterPacket.ItemType itemType=   entry.getType();
-            String stringItemType = getRosterItemTypeString(itemType);
+//            String stringItemType = getRosterItemTypeString(itemType);
 
             //Update data in the db
             //Get all the contacts
@@ -775,6 +775,7 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
      * use in App without needing to user network all the time. */
     public void saveUserAvatarsLocaly ()
     {
+        Log.d(TAG,"SAVING THE USER AVATARS TO DISK...");
         File rootPath = new File(mApplicationContext.getExternalFilesDir("DIRECTORY_PICTURES") , "profile_pictures");
 
         //Create the root Dir if it is not there
@@ -788,41 +789,78 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
             }
         }
 
-        //Write the actual data
+        //Save self profile image to disk if available
+        String selfJid = PreferenceManager.getDefaultSharedPreferences(mApplicationContext)
+                .getString("xmpp_jid",null);
+        if( selfJid != null)
+        {
+            Log.d(TAG,"Got a valid self Jid :"+selfJid);
+            VCard vCard = null;
+            try {
+                vCard = vCardManager.loadVCard();
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if( vCard != null)
+            {
+                saveAvatarToDisk(vCard,rootPath,selfJid);
+            }
+        }else
+        {
+            Log.d(TAG,"Self jid is NULL");
+        }
+
+
+
+
+        //Save other contacts profile images to disk
         List<String> contacts = ContactModel.get(mApplicationContext).getContactJidStrings();
         for ( String contact : contacts)
         {
+
             VCard  vCard = getUserVCard(contact);
-            String imageMimeType = null;
-            String imageExtension = null;
-            Bitmap.CompressFormat format = null;
+            saveAvatarToDisk(vCard,rootPath,contact);
+        }
+    }
 
-            if( vCard != null)
+    private void saveAvatarToDisk( VCard vCard ,File rootPath ,String contact)
+    {
+
+        String imageMimeType = null;
+        String imageExtension = null;
+        Bitmap.CompressFormat format = null;
+        if( vCard != null)
+        {
+            byte [] image_data = vCard.getAvatar();
+            imageMimeType = vCard.getAvatarMimeType();
+            if( image_data != null)
             {
-                byte [] image_data = vCard.getAvatar();
-                imageMimeType = vCard.getAvatarMimeType();
-                if( image_data != null)
+                Log.d(TAG,"Found an avatar for user : "+ contact);
+
+                if ( imageMimeType.equals("image/jpeg"))
                 {
-                    Log.d(TAG,"Found an avatar for user : "+ contact);
+                    Log.d(TAG,"The image mime type is JPEG");
+                    imageExtension = "jpeg";
+                    format = Bitmap.CompressFormat.JPEG;
+                }else if( imageMimeType.equals("image/jpg"))
+                {
+                    Log.d(TAG,"The image mime type is JPG");
+                    imageExtension = "jpg";
+                    format = Bitmap.CompressFormat.JPEG;
+                }else if( imageMimeType.equals("image/png"))
+                {
+                    Log.d(TAG,"The image mime type is PNG");
+                    imageExtension = "png";
+                    format = Bitmap.CompressFormat.PNG;
+                }
 
-                    if ( imageMimeType.equals("image/jpeg"))
-                    {
-                        Log.d(TAG,"The image mime type is JPEG");
-                        imageExtension = "jpeg";
-                        format = Bitmap.CompressFormat.JPEG;
-                    }else if( imageMimeType.equals("image/jpg"))
-                    {
-                        Log.d(TAG,"The image mime type is JPG");
-                        imageExtension = "jpg";
-                        format = Bitmap.CompressFormat.JPEG;
-                    }else if( imageMimeType.equals("image/png"))
-                    {
-                        Log.d(TAG,"The image mime type is PNG");
-                        imageExtension = "png";
-                        format = Bitmap.CompressFormat.PNG;
-                    }
-
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(image_data, 0, image_data.length);
+                Bitmap bitmap = BitmapFactory.decodeByteArray(image_data, 0, image_data.length);
 
                 File file = new File (rootPath, contact+"."+imageExtension);
                 if (file.exists ())
@@ -838,12 +876,12 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
                 }
                 Log.d(TAG,"Image write operation successful.File :" + file.getAbsolutePath());
 
-                }else
-                {
-                    Log.d(TAG,"Could not get avatar for user : "+contact);
-                }
+            }else
+            {
+                Log.d(TAG,"Could not get avatar for user : "+contact);
             }
         }
+
     }
 
 
@@ -889,31 +927,6 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
         }else
         {
             return file.getAbsolutePath();
-        }
-    }
-
-
-
-    private String getRosterItemTypeString(RosterPacket.ItemType itemType)
-    {
-        if(itemType == RosterPacket.ItemType.none)
-        {
-            return "NONE";
-        }
-        else if(itemType == RosterPacket.ItemType.from)
-        {
-            return "FROM";
-        }
-        else if(itemType == RosterPacket.ItemType.to)
-        {
-            return "TO";
-        }
-        else if(itemType == RosterPacket.ItemType.both)
-        {
-            return  "BOTH";
-        }else
-        {
-            return "UNKNOWN";
         }
     }
 
@@ -1244,10 +1257,6 @@ public class RoosterConnection implements ConnectionListener ,PingFailedListener
         Log.d(TAG,"Presence :" + presence.toString());
 
     }
-
-
-
-
 
     private void showContactListActivityWhenAuthenticated()
     {

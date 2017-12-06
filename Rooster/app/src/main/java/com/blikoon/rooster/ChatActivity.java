@@ -27,9 +27,6 @@ import com.blikoon.rooster.model.ContactModel;
 import com.blikoon.rooster.ui.InsetDecoration;
 import com.blikoon.rooster.ui.KeyboardUtil;
 
-import org.acra.ACRA;
-import org.w3c.dom.Text;
-
 public class ChatActivity extends ActionBarActivity implements
         ChatMessagesAdapter.OnItemClickListener,ChatMessagesAdapter.OnInformRecyclerViewToScrollDownListener,
         KeyboardUtil.KeyboardVisibilityListener {
@@ -307,7 +304,7 @@ public class ChatActivity extends ActionBarActivity implements
     /** OnItemClickListener Methods */
     @Override
     public void onItemClick(ChatMessagesAdapter.ChatMessageViewHolder item, int position) {
-        Toast.makeText(this, item.getSummary(), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, item.getMessageTimestamp(), Toast.LENGTH_SHORT).show();
     }
 
     /** OnInformRecyclerViewToScrollDownListener Methods */
