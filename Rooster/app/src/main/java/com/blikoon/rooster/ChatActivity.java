@@ -4,8 +4,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.v7.app.ActionBarActivity;
+//import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -27,7 +28,7 @@ import com.blikoon.rooster.model.ContactModel;
 import com.blikoon.rooster.ui.InsetDecoration;
 import com.blikoon.rooster.ui.KeyboardUtil;
 
-public class ChatActivity extends ActionBarActivity implements
+public class ChatActivity extends AppCompatActivity implements
         ChatMessagesAdapter.OnItemClickListener,ChatMessagesAdapter.OnInformRecyclerViewToScrollDownListener,
         KeyboardUtil.KeyboardVisibilityListener {
 
